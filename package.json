@@ -1,0 +1,39 @@
+{
+	"name": "pluteo-js-template",
+	"private": true,
+	"version": "0.0.1",
+	"description": "PluteoJS Turborepo Template",
+	"repository": "git@gitlab.com:PluteoJS/pluteojs-template.git",
+	"author": "Muhammad Swalah A A <swalah@heedlabs.com>",
+	"scripts": {
+		"preinstall": "node ./tooling/monorepo-utils/enforce-pnpm.mjs",
+		"enforce-pnpm:sync": "node ./tooling/monorepo-utils/sync-pnpm-preinstall.mjs",
+		"prepare": "husky",
+		"build": "turbo run build",
+		"dev": "turbo run dev",
+		"lint": "turbo run lint",
+		"format": "prettier --write \"**/*.{ts,tsx,md}\"",
+		"check-types": "turbo run check-types",
+		"release:compute-version": "pnpm --filter @pluteojs/tooling-release-versioning compute-version",
+		"release:fix-branch": "pnpm --filter @pluteojs/tooling-release-versioning fix-release-branch"
+	},
+	"lint-staged": {
+		"*.{js,jsx,ts,tsx,json,md}": [
+			"prettier --write"
+		]
+	},
+	"devDependencies": {
+		"@commitlint/cli": "^20.1.0",
+		"@commitlint/config-conventional": "^20.0.0",
+		"commitlint-plugin-workspace-scopes": "^1.1.0",
+		"husky": "^9.1.7",
+		"lint-staged": "^16.2.7",
+		"prettier": "^3.6.2",
+		"turbo": "^2.6.1",
+		"typescript": "5.9.2"
+	},
+	"packageManager": "pnpm@9.0.0",
+	"engines": {
+		"node": "22.x"
+	}
+}
