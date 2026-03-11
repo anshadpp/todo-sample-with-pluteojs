@@ -1,25 +1,47 @@
-import type {Session, User} from "better-auth";
+/**
+ * Base user type matching better-auth's User interface.
+ * Inlined to avoid cascading type errors from better-auth's Zod re-exports.
+ */
+interface BaseUser {
+	id: string;
+	email: string;
+	emailVerified: boolean;
+	name: string;
+	createdAt: Date;
+	updatedAt: Date;
+	image?: string | null;
+}
+
+/**
+ * Base session type matching better-auth's Session interface.
+ * Inlined to avoid cascading type errors from better-auth's Zod re-exports.
+ */
+interface BaseSession {
+	id: string;
+	userId: string;
+	expiresAt: Date;
+	token: string;
+	createdAt: Date;
+	updatedAt: Date;
+	ipAddress?: string | null;
+	userAgent?: string | null;
+}
 
 /**
  * Extended user type with additional fields.
  *
- * FIXME: This interface currently has no additional members beyond what User provides.
- * The eslint-disable below suppresses the "no-empty-object-type" warning because this
- * interface is intentionally kept as a placeholder for future customization.
- *
  * When you add custom user fields (e.g., phoneNumber, avatarUrl, preferences):
- * 1. Add your custom properties to this interface
- * 2. Remove the eslint-disable comment below - it will no longer be needed
+ * add your custom properties to this interface.
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface ExtendedUser extends User {
+export interface ExtendedUser extends BaseUser {
 	// Add custom user fields here
 }
 
 /**
  * Extended session type with organization context.
  */
-export interface ExtendedSession extends Session {
+export interface ExtendedSession extends BaseSession {
 	activeOrganizationId?: string | null;
 	activeTeamId?: string | null;
 }

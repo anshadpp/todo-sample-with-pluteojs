@@ -9,6 +9,15 @@ import {ServiceError} from "@errors/ServiceError";
 import {taskServiceError} from "@constants/errors/taskServiceErrors";
 
 export default class TasksService {
+	private safeISOString(date: Date | null | undefined): string | null {
+		if (!date) {return null;}
+		try {
+			return date.toISOString();
+		} catch {
+			return null;
+		}
+	}
+
 	private toDTO(record: typeof tasks.$inferSelect, extra?: {
 		labels?: {id: string; projectId: string; name: string; color: string; createdAt: Date}[];
 		assignee?: {id: string; name: string; image: string | null} | null;
@@ -25,13 +34,13 @@ export default class TasksService {
 			priority: record.priority,
 			status: record.status,
 			sortOrder: record.sortOrder,
-			dueAt: record.dueAt?.toISOString() ?? null,
-			startAt: record.startAt?.toISOString() ?? null,
+			dueAt: this.safeISOString(record.dueAt),
+			startAt: this.safeISOString(record.startAt),
 			estimatedMinutes: record.estimatedMinutes,
 			effortLevel: record.effortLevel ?? null,
 			coverImage: record.coverImage,
 			isArchived: record.isArchived,
-			completedAt: record.completedAt?.toISOString() ?? null,
+			completedAt: this.safeISOString(record.completedAt),
 			createdAt: record.createdAt.toISOString(),
 			updatedAt: record.updatedAt.toISOString(),
 			labels: extra?.labels?.map((l) => {return {

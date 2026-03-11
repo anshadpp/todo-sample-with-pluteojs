@@ -22,7 +22,7 @@
 		}
 	},
 	"scripts": {
-		"build": "tsup && tsc --emitDeclarationOnly --declaration --outDir dist",
+		"build": "tsup && tsc --emitDeclarationOnly --declaration --outDir dist && node scripts/fix-dts.mjs",
 		"check-types": "tsc --noEmit",
 		"lint": "eslint .",
 		"dev": "tsup --watch",

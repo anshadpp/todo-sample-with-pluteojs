@@ -35,5 +35,3 @@ export type {
 	PasswordResetEmailData,
 } from "./types/index.js";
 
-// Re-export useful types from better-auth
-export type {Session, User} from "better-auth";

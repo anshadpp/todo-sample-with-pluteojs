@@ -86,6 +86,10 @@ export default function SyncScreen() {
 
 	const getActionLabel = (action: SyncAction) => {
 		switch (action.type) {
+			case "create_project":
+				return `Create project: ${(action.payload?.name as string) || "Untitled"}`;
+			case "delete_project":
+				return `Delete project ${action.projectId.slice(0, 8)}...`;
 			case "create_task":
 				return `Create task: ${(action.payload?.title as string) || "Untitled"}`;
 			case "update_task":
