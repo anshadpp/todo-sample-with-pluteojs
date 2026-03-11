@@ -21,10 +21,13 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-	title: "PluteoJS",
-	description: "A Full-Stack TypeScript Template for Scalable Applications",
+	title: "Pluteo - Project Management",
+	description: "A collaborative project management platform with Kanban boards",
+	icons: {
+		icon: "/icon.svg",
+	},
 	appleWebApp: {
-		title: "PluteoJS",
+		title: "Pluteo",
 	},
 };
 

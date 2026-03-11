@@ -207,8 +207,11 @@ const loadExpress = ({app}: {app: express.Application}): void => {
 	// Use helmet
 	app.use(helmet());
 
-	// Enable Cross Origin Resource Sharing to all origins by default
-	app.use(cors());
+	// Enable Cross Origin Resource Sharing with credentials support
+	app.use(cors({
+		origin: process.env.CORS_ORIGIN || "http://localhost:4020",
+		credentials: true,
+	}));
 
 	// adds a unique id to each request
 	app.use(addRequestId);

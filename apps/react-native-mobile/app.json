@@ -1,0 +1,23 @@
+{
+	"expo": {
+		"name": "Pluteo",
+		"slug": "pluteo-mobile",
+		"version": "1.0.0",
+		"orientation": "portrait",
+		"userInterfaceStyle": "automatic",
+		"newArchEnabled": true,
+		"splash": {
+			"backgroundColor": "#0F172A"
+		},
+		"ios": {
+			"supportsTablet": true,
+			"bundleIdentifier": "com.pluteo.mobile"
+		},
+		"android": {
+			"adaptiveIcon": {
+				"backgroundColor": "#0F172A"
+			},
+			"package": "com.pluteo.mobile"
+		}
+	}
+}

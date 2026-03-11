@@ -1,2 +1,2 @@
-export * from "./emailLogs.schema";
-export * from "./emailVerificationRequestLogs.schema";
+export * from "./emailLogs.schema.js";
+export * from "./emailVerificationRequestLogs.schema.js";

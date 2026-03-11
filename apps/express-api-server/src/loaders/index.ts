@@ -4,6 +4,7 @@ import Logger from "@loaders/logger";
 import loadExpress from "@loaders/expressLoader";
 import loadBetterAuth from "@loaders/betterAuthLoader";
 import {loadOpenApi} from "@loaders/openApiLoader";
+import TodoNotifierService from "@services/TodoNotifierService";
 
 const loader = async ({
 	expressApp,
@@ -19,6 +20,10 @@ const loader = async ({
 	// loading express...
 	await loadExpress({app: expressApp});
 	Logger.loggerInstance.info("Express loaded");
+
+	// Start the todo notification service
+	const todoNotifier = new TodoNotifierService();
+	todoNotifier.start();
 };
 
 export default loader;

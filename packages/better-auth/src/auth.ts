@@ -34,6 +34,7 @@ export const auth = betterAuth({
 	baseURL: config.betterAuth.baseURL,
 	basePath: config.betterAuth.basePath,
 	secret: config.betterAuth.secret,
+	trustedOrigins: [process.env.CORS_ORIGIN || "http://localhost:4020"],
 
 	// Database adapter using existing Drizzle instance
 	database: drizzleAdapter(db, {

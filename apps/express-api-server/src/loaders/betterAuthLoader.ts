@@ -18,15 +18,19 @@ import emailServiceUtil from "@util/emailServiceUtil";
 async function sendEmail(options: iEmailSendOptions): Promise<void> {
 	const {from, to, subject, html, text} = options;
 
-	await emailServiceUtil.sendTransactionHtmlEmail(
-		from,
-		to,
-		null, // cc
-		null, // bcc
-		subject,
-		text || "", // Plain text fallback
-		html
-	);
+	try {
+		await emailServiceUtil.sendTransactionHtmlEmail(
+			from,
+			to,
+			null, // cc
+			null, // bcc
+			subject,
+			text || "", // Plain text fallback
+			html
+		);
+	} catch (error) {
+		logger.error(null, `Failed to send email to ${to}: ${(error as Error).message}`);
+	}
 }
 
 /**

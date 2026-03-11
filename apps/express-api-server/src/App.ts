@@ -1,4 +1,5 @@
 import cluster from "cluster";
+import http from "http";
 import os from "os";
 
 import express from "express";
@@ -6,6 +7,7 @@ import express from "express";
 import config from "@config";
 import logger from "@loaders/logger";
 
+import webSocketService from "./services/WebSocketService";
 import appUtil from "./util/appUtil";
 
 /**
@@ -15,12 +17,16 @@ import appUtil from "./util/appUtil";
  */
 async function startServerNode(): Promise<void> {
 	const app = express();
+	const httpServer = http.createServer(app);
+
+	// Initialize WebSocket server
+	webSocketService.initialize(httpServer);
 
 	// Perform the dynamic import when needed
 	const loaders = await import("@loaders/index");
 	await loaders.default({expressApp: app});
 
-	app.listen(config.port, () => {
+	httpServer.listen(config.port, () => {
 		logger
 			.info(
 				null,

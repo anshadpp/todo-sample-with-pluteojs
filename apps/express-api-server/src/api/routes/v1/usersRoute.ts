@@ -1,5 +1,6 @@
 import type {Router, Request, Response, NextFunction} from "express";
 
+import {db, eq, users} from "@pluteojs/database";
 import {userResponseSchema} from "@pluteojs/api-types";
 
 import {isAuthorized} from "@api/middlewares/authorizationMiddleware";
@@ -67,6 +68,68 @@ export default (route: Router): void => {
 
 				const data = await usersService.getUserDetails(userId);
 				res.ok(data);
+			} catch (error) {
+				next(error);
+			}
+		}
+	);
+
+	/**
+	 * PATCH /users/
+	 * Updates the current user's profile.
+	 * Requires authentication.
+	 */
+	route.patch(
+		"/users/",
+		isAuthorized,
+		async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+			const uniqueRequestId = expressUtil.parseUniqueRequestId(req);
+			logger.debug(uniqueRequestId, "Update user profile request received");
+
+			try {
+				const userId = req.user?.id;
+				if (!userId) {
+					throw new Error("User ID not found in session");
+				}
+
+				const {name, image} = req.body as {name?: string; image?: string | null};
+
+				const updateData: Record<string, unknown> = {};
+				if (name !== undefined) {updateData.name = name;}
+				if (image !== undefined) {updateData.image = image;}
+
+				if (Object.keys(updateData).length === 0) {
+					res.fail(
+						{error: "NoFieldsToUpdate", message: "No fields to update", details: null},
+						400 as never
+					);
+					return;
+				}
+
+				const updated = await db
+					.update(users)
+					.set(updateData)
+					.where(eq(users.id, userId))
+					.returning();
+
+				if (updated.length === 0) {
+					res.fail(
+						{error: "UserNotFound", message: "User not found", details: null},
+						404 as never
+					);
+					return;
+				}
+
+				const user = updated[0]!;
+				res.ok({
+					id: user.id,
+					name: user.name,
+					email: user.email,
+					emailVerified: user.emailVerified,
+					image: user.image,
+					createdAt: user.createdAt?.toISOString() ?? "",
+					updatedAt: user.updatedAt?.toISOString() ?? "",
+				});
 			} catch (error) {
 				next(error);
 			}
