@@ -3,6 +3,7 @@ export interface iBoard {
 	projectId: string;
 	name: string;
 	description: string | null;
+	type: "status" | "category";
 	isDefault: boolean;
 	sortOrder: number;
 	createdAt: string;
@@ -12,6 +13,7 @@ export interface iBoard {
 export interface iCreateBoardDTO {
 	name: string;
 	description?: string;
+	type?: "status" | "category";
 }
 
 export interface iUpdateBoardDTO {

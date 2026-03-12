@@ -20,17 +20,19 @@ export const tasks = pgTable(
 		projectId: uuid("project_id")
 			.notNull()
 			.references(() => projects.id, {onDelete: "cascade"}),
-		categoryId: uuid("category_id")
-			.references(() => categories.id, {onDelete: "set null"}),
+		categoryId: uuid("category_id").references(() => categories.id, {
+			onDelete: "set null",
+		}),
 		createdById: uuid("created_by_id")
 			.notNull()
 			.references(() => users.id, {onDelete: "cascade"}),
-		assigneeId: uuid("assignee_id")
-			.references(() => users.id, {onDelete: "set null"}),
+		assigneeId: uuid("assignee_id").references(() => users.id, {
+			onDelete: "set null",
+		}),
 		title: text("title").notNull(),
 		description: text("description"),
 		priority: text("priority").default("medium").notNull(),
-		status: text("status").default("open").notNull(),
+		status: text("status").default("todo").notNull(),
 		sortOrder: integer("sort_order").default(0).notNull(),
 		dueAt: timestamp("due_at", {withTimezone: true}),
 		startAt: timestamp("start_at", {withTimezone: true}),
@@ -39,7 +41,9 @@ export const tasks = pgTable(
 		coverImage: text("cover_image"),
 		isArchived: boolean("is_archived").default(false).notNull(),
 		completedAt: timestamp("completed_at", {withTimezone: true}),
-		createdAt: timestamp("created_at", {withTimezone: true}).defaultNow().notNull(),
+		createdAt: timestamp("created_at", {withTimezone: true})
+			.defaultNow()
+			.notNull(),
 		updatedAt: timestamp("updated_at", {withTimezone: true})
 			.defaultNow()
 			.$onUpdate(() => new Date())
@@ -53,7 +57,7 @@ export const tasks = pgTable(
 		index("tasks_status_idx").on(table.status),
 		index("tasks_priority_idx").on(table.priority),
 		index("tasks_dueAt_idx").on(table.dueAt),
-	],
+	]
 );
 
 export type Task = typeof tasks.$inferSelect;

@@ -7,6 +7,7 @@ export const categorySchema = z.object({
 	boardId: uuidv4Schema,
 	name: z.string().min(1, "Name is required"),
 	color: z.string().nullable(),
+	statusValue: z.string().nullable(),
 	sortOrder: z.number(),
 	wipLimit: z.number().nullable(),
 	createdAt: z.string().datetime(),
@@ -16,21 +17,25 @@ export const categorySchema = z.object({
 export const createCategoryBodySchema = z.object({
 	name: z.string().min(1, "Name is required"),
 	color: z.string().optional(),
+	statusValue: z.string().optional(),
 	wipLimit: z.number().positive().optional(),
 });
 
 export const updateCategoryBodySchema = z.object({
 	name: z.string().min(1).optional(),
 	color: z.string().nullable().optional(),
+	statusValue: z.string().nullable().optional(),
 	sortOrder: z.number().optional(),
 	wipLimit: z.number().positive().nullable().optional(),
 });
 
 export const reorderCategoriesBodySchema = z.object({
-	categories: z.array(z.object({
-		id: uuidv4Schema,
-		sortOrder: z.number(),
-	})),
+	categories: z.array(
+		z.object({
+			id: uuidv4Schema,
+			sortOrder: z.number(),
+		})
+	),
 });
 
 export const categoryResponseSchema = categorySchema;

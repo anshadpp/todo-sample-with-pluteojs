@@ -59,6 +59,7 @@ interface Category {
 	boardId: string;
 	name: string;
 	color: string | null;
+	statusValue?: string | null;
 	sortOrder: number;
 	wipLimit?: number | null;
 }
@@ -146,6 +147,7 @@ interface Board {
 	id: string;
 	name: string;
 	projectId: string;
+	type?: "status" | "category";
 	categories?: Category[];
 }
 
@@ -170,6 +172,7 @@ const priorityLabels: Record<string, string> = {
 };
 
 const statusLabels: Record<string, string> = {
+	todo: "Todo",
 	open: "Open",
 	in_progress: "In Progress",
 	review: "Review",
@@ -215,6 +218,7 @@ export default function BoardPage() {
 	const boardId = params.boardId as string;
 
 	const [boardName, setBoardName] = useState("");
+	const [boardType, setBoardType] = useState<"status" | "category">("status");
 	const [boards, setBoards] = useState<Board[]>([]);
 	const [categories, setCategories] = useState<Category[]>([]);
 	const [tasksByCategory, setTasksByCategory] = useState<
@@ -233,6 +237,7 @@ export default function BoardPage() {
 	const [showDeleteCategoryModal, setShowDeleteCategoryModal] = useState<
 		string | null
 	>(null);
+	const [showCreateBoardModal, setShowCreateBoardModal] = useState(false);
 	const [viewMode, setViewMode] = useState<
 		"board" | "list" | "calendar" | "timeline"
 	>("board");
@@ -260,31 +265,53 @@ export default function BoardPage() {
 			if (!boardResult.error && boardResult.data) {
 				const board = boardResult.data as unknown as {
 					name: string;
+					type?: "status" | "category";
 					categories?: Category[];
 				};
 				setBoardName(board.name);
+				const currentBoardType = board.type ?? "status";
+				setBoardType(currentBoardType);
 				const cats = (board.categories ?? []).sort(
 					(a: Category, b: Category) => a.sortOrder - b.sortOrder
 				);
 				setCategories(cats);
-			}
 
-			if (!boardsResult.error && boardsResult.data) {
-				setBoards(boardsResult.data as unknown as Board[]);
-			}
+				if (!boardsResult.error && boardsResult.data) {
+					setBoards(boardsResult.data as unknown as Board[]);
+				}
 
-			if (!tasksResult.error && tasksResult.data) {
-				const allTasks = tasksResult.data as unknown as Task[];
-				const grouped: Record<string, Task[]> = {};
-				for (const task of allTasks) {
-					const catId = task.categoryId || "uncategorized";
-					if (!grouped[catId]) grouped[catId] = [];
-					grouped[catId]!.push(task);
+				if (!tasksResult.error && tasksResult.data) {
+					const allTasks = tasksResult.data as unknown as Task[];
+					const grouped: Record<string, Task[]> = {};
+
+					if (currentBoardType === "status") {
+						// Group tasks by matching task.status to category statusValue
+						for (const task of allTasks) {
+							const matchingCat = cats.find(
+								(c: Category) => c.statusValue === task.status
+							);
+							const catId = matchingCat ? matchingCat.id : "uncategorized";
+							if (!grouped[catId]) grouped[catId] = [];
+							grouped[catId]!.push(task);
+						}
+					} else {
+						// Category board: group by categoryId
+						for (const task of allTasks) {
+							const catId = task.categoryId || "uncategorized";
+							if (!grouped[catId]) grouped[catId] = [];
+							grouped[catId]!.push(task);
+						}
+					}
+
+					for (const catId of Object.keys(grouped)) {
+						grouped[catId]!.sort((a, b) => a.sortOrder - b.sortOrder);
+					}
+					setTasksByCategory(grouped);
 				}
-				for (const catId of Object.keys(grouped)) {
-					grouped[catId]!.sort((a, b) => a.sortOrder - b.sortOrder);
+			} else {
+				if (!boardsResult.error && boardsResult.data) {
+					setBoards(boardsResult.data as unknown as Board[]);
 				}
-				setTasksByCategory(grouped);
 			}
 
 			// Fetch members
@@ -321,19 +348,42 @@ export default function BoardPage() {
 		});
 
 		socket.on("task:created", (task: Task) => {
-			const catId = task.categoryId || "uncategorized";
-			setTasksByCategory((prev) => ({
-				...prev,
-				[catId]: [...(prev[catId] || []), task],
-			}));
+			setTasksByCategory((prev) => {
+				// Determine the right column for this task
+				let catId: string;
+				if (boardType === "status") {
+					const matchingCat = categories.find(
+						(c) => c.statusValue === task.status
+					);
+					catId = matchingCat ? matchingCat.id : "uncategorized";
+				} else {
+					catId = task.categoryId || "uncategorized";
+				}
+				return {
+					...prev,
+					[catId]: [...(prev[catId] || []), task],
+				};
+			});
 		});
 
 		socket.on("task:updated", (task: Task) => {
 			setTasksByCategory((prev) => {
-				const next = {...prev};
-				for (const catId of Object.keys(next)) {
-					next[catId] = next[catId]!.map((t) => (t.id === task.id ? task : t));
+				const next: Record<string, Task[]> = {};
+				// Remove task from all columns first
+				for (const catId of Object.keys(prev)) {
+					next[catId] = prev[catId]!.filter((t) => t.id !== task.id);
 				}
+				// Place task in correct column
+				let targetCatId: string;
+				if (boardType === "status") {
+					const matchingCat = categories.find(
+						(c) => c.statusValue === task.status
+					);
+					targetCatId = matchingCat ? matchingCat.id : "uncategorized";
+				} else {
+					targetCatId = task.categoryId || "uncategorized";
+				}
+				next[targetCatId] = [...(next[targetCatId] || []), task];
 				return next;
 			});
 		});
@@ -344,7 +394,15 @@ export default function BoardPage() {
 				for (const catId of Object.keys(prev)) {
 					next[catId] = prev[catId]!.filter((t) => t.id !== task.id);
 				}
-				const newCatId = task.categoryId || "uncategorized";
+				let newCatId: string;
+				if (boardType === "status") {
+					const matchingCat = categories.find(
+						(c) => c.statusValue === task.status
+					);
+					newCatId = matchingCat ? matchingCat.id : "uncategorized";
+				} else {
+					newCatId = task.categoryId || "uncategorized";
+				}
 				next[newCatId] = [...(next[newCatId] || []), task];
 				return next;
 			});
@@ -365,7 +423,7 @@ export default function BoardPage() {
 			socket.emit("leave:project", projectId);
 			socket.disconnect();
 		};
-	}, [boardId, projectId]);
+	}, [boardId, projectId, boardType, categories]);
 
 	// ----- Search & Filter -------------------------------------------------
 
@@ -431,15 +489,29 @@ export default function BoardPage() {
 			const draggedTask = findTaskById(activeId);
 			if (!draggedTask) return;
 
-			const activeCategoryId = draggedTask.categoryId || "uncategorized";
+			// Find which category column the task is currently in
+			let activeCategoryId: string = "uncategorized";
+			for (const [catId, tasks] of Object.entries(tasksByCategoryRef.current)) {
+				if (tasks.some((t) => t.id === activeId)) {
+					activeCategoryId = catId;
+					break;
+				}
+			}
 
 			let overCategoryId: string;
 			if (categories.some((c) => c.id === overId)) {
 				overCategoryId = overId;
 			} else {
-				const overTask = findTaskById(overId);
-				if (!overTask) return;
-				overCategoryId = overTask.categoryId || "uncategorized";
+				// Find which category the over task belongs to
+				overCategoryId = "uncategorized";
+				for (const [catId, tasks] of Object.entries(
+					tasksByCategoryRef.current
+				)) {
+					if (tasks.some((t) => t.id === overId)) {
+						overCategoryId = catId;
+						break;
+					}
+				}
 			}
 
 			if (activeCategoryId === overCategoryId) return;
@@ -450,9 +522,12 @@ export default function BoardPage() {
 				);
 				const destTasks = [...(prev[overCategoryId] || [])];
 
+				const targetCategory = categories.find((c) => c.id === overCategoryId);
 				const movedTask: Task = {
 					...draggedTask,
-					categoryId: overCategoryId,
+					...(boardType === "status" && targetCategory?.statusValue
+						? {status: targetCategory.statusValue}
+						: {categoryId: overCategoryId}),
 				};
 
 				const overIndex = destTasks.findIndex((t) => t.id === overId);
@@ -469,7 +544,7 @@ export default function BoardPage() {
 				};
 			});
 		},
-		[categories, findTaskById]
+		[categories, findTaskById, boardType]
 	);
 
 	const handleDragEnd = useCallback(
@@ -484,7 +559,14 @@ export default function BoardPage() {
 			const draggedTask = findTaskById(activeId);
 			if (!draggedTask) return;
 
-			const categoryId = draggedTask.categoryId || "uncategorized";
+			// Find which category column this task is in
+			let categoryId: string = "uncategorized";
+			for (const [catId, tasks] of Object.entries(tasksByCategoryRef.current)) {
+				if (tasks.some((t) => t.id === activeId)) {
+					categoryId = catId;
+					break;
+				}
+			}
 
 			if (activeId !== overId) {
 				setTasksByCategory((prev) => {
@@ -507,17 +589,31 @@ export default function BoardPage() {
 				sortOrder: i * 1000,
 			}));
 
+			const sortOrder =
+				reorderItems.find((r) => r.id === activeId)?.sortOrder ?? 0;
+
 			if (categoryId !== "uncategorized") {
-				await taskService.moveTask(activeId, {
-					categoryId,
-					sortOrder:
-						reorderItems.find((r) => r.id === activeId)?.sortOrder ?? 0,
-				});
+				if (boardType === "status") {
+					// Status board: update task.status to match the target column's statusValue
+					const targetCategory = categories.find((c) => c.id === categoryId);
+					if (targetCategory?.statusValue) {
+						await taskService.updateTask(activeId, {
+							status: targetCategory.statusValue,
+							sortOrder,
+						});
+					}
+				} else {
+					// Category board: move task to the category
+					await taskService.moveTask(activeId, {
+						categoryId,
+						sortOrder,
+					});
+				}
 			}
 
 			await taskService.reorderTasks(reorderItems);
 		},
-		[findTaskById]
+		[findTaskById, boardType, categories]
 	);
 
 	// ----- Task CRUD -------------------------------------------------------
@@ -528,11 +624,28 @@ export default function BoardPage() {
 			const maxOrder =
 				tasks.length > 0 ? Math.max(...tasks.map((t) => t.sortOrder)) : -1000;
 
-			const result = await taskService.createTask(projectId, {
+			const createPayload: Record<string, unknown> = {
 				title,
-				categoryId,
 				sortOrder: maxOrder + 1000,
-			});
+			};
+
+			if (boardType === "status") {
+				// Status board: set task.status to column's statusValue
+				const category = categories.find((c) => c.id === categoryId);
+				if (category?.statusValue) {
+					createPayload.status = category.statusValue;
+				}
+				// Still set categoryId so the task is associated with this board's column
+				createPayload.categoryId = categoryId;
+			} else {
+				// Category board: set categoryId
+				createPayload.categoryId = categoryId;
+			}
+
+			const result = await taskService.createTask(
+				projectId,
+				createPayload as Parameters<typeof taskService.createTask>[1]
+			);
 
 			if (!result.error && result.data) {
 				const newTask = result.data as unknown as Task;
@@ -542,7 +655,7 @@ export default function BoardPage() {
 				}));
 			}
 		},
-		[projectId]
+		[projectId, boardType, categories]
 	);
 
 	const handleTaskClick = useCallback(async (task: Task) => {
@@ -598,14 +711,21 @@ export default function BoardPage() {
 	// ----- Category CRUD ---------------------------------------------------
 
 	const handleCreateCategory = useCallback(
-		async (name: string, color?: string) => {
-			const result = await boardService.createCategory(boardId, {name, color});
+		async (name: string, color?: string, statusValue?: string) => {
+			const payload: {name: string; color?: string; statusValue?: string} = {
+				name,
+				color,
+			};
+			if (boardType === "status" && statusValue) {
+				payload.statusValue = statusValue;
+			}
+			const result = await boardService.createCategory(boardId, payload);
 			if (!result.error && result.data) {
 				setCategories((prev) => [...prev, result.data as unknown as Category]);
 			}
 			setShowCreateCategoryModal(false);
 		},
-		[boardId]
+		[boardId, boardType]
 	);
 
 	const handleDeleteCategory = useCallback(
@@ -617,11 +737,24 @@ export default function BoardPage() {
 		[boardId]
 	);
 
-	// ----- Board switching -------------------------------------------------
+	// ----- Board switching / creation --------------------------------------
 
 	const handleBoardSwitch = useCallback(
 		(newBoardId: string) => {
 			router.push(`/dashboard/projects/${projectId}/boards/${newBoardId}`);
+		},
+		[projectId, router]
+	);
+
+	const handleCreateBoard = useCallback(
+		async (name: string, type: "status" | "category") => {
+			const result = await boardService.createBoard(projectId, {name, type});
+			if (!result.error && result.data) {
+				const newBoard = result.data as unknown as Board;
+				setBoards((prev) => [...prev, newBoard]);
+				setShowCreateBoardModal(false);
+				router.push(`/dashboard/projects/${projectId}/boards/${newBoard.id}`);
+			}
 		},
 		[projectId, router]
 	);
@@ -674,35 +807,40 @@ export default function BoardPage() {
 								className="gap-1 text-lg font-semibold"
 							>
 								{boardName}
-								{boards.length > 1 && (
-									<svg
-										width="12"
-										height="12"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="2"
-									>
-										<path d="M6 9l6 6 6-6" />
-									</svg>
-								)}
+								<svg
+									width="12"
+									height="12"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2"
+								>
+									<path d="M6 9l6 6 6-6" />
+								</svg>
 							</Button>
 						</DropdownMenuTrigger>
-						{boards.length > 1 && (
-							<DropdownMenuContent align="start">
-								{boards.map((b) => (
-									<DropdownMenuItem
-										key={b.id}
-										onClick={() => handleBoardSwitch(b.id)}
-									>
-										{b.name}
-										{b.id === boardId && (
-											<span className="ml-auto text-primary">&#10003;</span>
-										)}
-									</DropdownMenuItem>
-								))}
-							</DropdownMenuContent>
-						)}
+						<DropdownMenuContent align="start">
+							{boards.map((b) => (
+								<DropdownMenuItem
+									key={b.id}
+									onClick={() => handleBoardSwitch(b.id)}
+								>
+									{b.name}
+									{b.type && (
+										<span className="ml-1 text-xs text-muted-foreground">
+											({b.type})
+										</span>
+									)}
+									{b.id === boardId && (
+										<span className="ml-auto text-primary">&#10003;</span>
+									)}
+								</DropdownMenuItem>
+							))}
+							<DropdownMenuSeparator />
+							<DropdownMenuItem onClick={() => setShowCreateBoardModal(true)}>
+								+ Create Board
+							</DropdownMenuItem>
+						</DropdownMenuContent>
 					</DropdownMenu>
 
 					{/* View switcher */}
@@ -866,14 +1004,14 @@ export default function BoardPage() {
 							</DragOverlay>
 						</DndContext>
 
-						{/* Add category column */}
+						{/* Add category/status column */}
 						<div className="w-72 shrink-0">
 							<Button
 								variant="outline"
 								className="w-full border-dashed h-12"
 								onClick={() => setShowCreateCategoryModal(true)}
 							>
-								+ Add Category
+								{boardType === "status" ? "+ Add Status" : "+ Add Category"}
 							</Button>
 						</div>
 					</div>
@@ -921,6 +1059,7 @@ export default function BoardPage() {
 			{/* Create Category Modal */}
 			{showCreateCategoryModal && (
 				<CreateCategoryModal
+					boardType={boardType}
 					onClose={() => setShowCreateCategoryModal(false)}
 					onCreated={handleCreateCategory}
 				/>
@@ -929,10 +1068,24 @@ export default function BoardPage() {
 			{/* Delete Category Confirmation Modal */}
 			{showDeleteCategoryModal && (
 				<ConfirmDeleteModal
-					title="Delete Category"
-					message="Delete this category? Tasks in it will become uncategorized."
+					title={
+						boardType === "status" ? "Delete Status Column" : "Delete Category"
+					}
+					message={
+						boardType === "status"
+							? "Delete this status column? Tasks with this status will need to be reassigned."
+							: "Delete this category? Tasks in it will become uncategorized."
+					}
 					onCancel={() => setShowDeleteCategoryModal(null)}
 					onConfirm={() => handleDeleteCategory(showDeleteCategoryModal)}
+				/>
+			)}
+
+			{/* Create Board Modal */}
+			{showCreateBoardModal && (
+				<CreateBoardModal
+					onClose={() => setShowCreateBoardModal(false)}
+					onCreated={handleCreateBoard}
 				/>
 			)}
 		</div>
@@ -955,22 +1108,43 @@ const CATEGORY_COLORS = [
 ];
 
 function CreateCategoryModal({
+	boardType,
 	onClose,
 	onCreated,
 }: {
+	boardType: "status" | "category";
 	onClose: () => void;
-	onCreated: (name: string, color?: string) => void;
+	onCreated: (name: string, color?: string, statusValue?: string) => void;
 }) {
 	const [name, setName] = useState("");
 	const [color, setColor] = useState(CATEGORY_COLORS[0]!.value);
+	const [statusValue, setStatusValue] = useState("");
 	const [submitting, setSubmitting] = useState(false);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!name.trim()) return;
+		if (boardType === "status" && !statusValue.trim()) return;
 		setSubmitting(true);
-		await onCreated(name.trim(), color);
+		await onCreated(
+			name.trim(),
+			color,
+			boardType === "status" ? statusValue.trim() : undefined
+		);
 		setSubmitting(false);
+	};
+
+	// Auto-generate statusValue from name
+	const handleNameChange = (value: string) => {
+		setName(value);
+		if (boardType === "status" && !statusValue) {
+			setStatusValue(
+				value
+					.toLowerCase()
+					.replace(/[^a-z0-9]+/g, "_")
+					.replace(/^_|_$/g, "")
+			);
+		}
 	};
 
 	return (
@@ -983,25 +1157,50 @@ function CreateCategoryModal({
 				onClick={(e) => e.stopPropagation()}
 			>
 				<div className="px-6 py-4 border-b border-border">
-					<h2 className="text-lg font-semibold">New Category</h2>
+					<h2 className="text-lg font-semibold">
+						{boardType === "status" ? "New Status Column" : "New Category"}
+					</h2>
 					<p className="text-sm text-muted-foreground mt-1">
-						Add a column to organize tasks.
+						{boardType === "status"
+							? "Add a status column. Tasks dragged here will get this status."
+							: "Add a column to organize tasks."}
 					</p>
 				</div>
 
 				<form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
 					<div>
 						<label className="block text-sm font-medium mb-1.5">
-							Category Name
+							{boardType === "status" ? "Status Name" : "Category Name"}
 						</label>
 						<input
 							autoFocus
 							value={name}
-							onChange={(e) => setName(e.target.value)}
-							placeholder="e.g. Backlog, In Review, QA"
+							onChange={(e) => handleNameChange(e.target.value)}
+							placeholder={
+								boardType === "status"
+									? "e.g. QA Testing, Blocked, Deployed"
+									: "e.g. Backlog, In Review, QA"
+							}
 							className="w-full px-3 py-2 text-sm border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
 						/>
 					</div>
+
+					{boardType === "status" && (
+						<div>
+							<label className="block text-sm font-medium mb-1.5">
+								Status Value
+							</label>
+							<input
+								value={statusValue}
+								onChange={(e) => setStatusValue(e.target.value)}
+								placeholder="e.g. qa_testing, blocked"
+								className="w-full px-3 py-2 text-sm border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+							/>
+							<p className="text-xs text-muted-foreground mt-1">
+								Internal value used for task status. Use snake_case.
+							</p>
+						</div>
+					)}
 
 					<div>
 						<label className="block text-sm font-medium mb-1.5">Color</label>
@@ -1032,8 +1231,143 @@ function CreateCategoryModal({
 						>
 							Cancel
 						</Button>
+						<Button
+							type="submit"
+							disabled={
+								!name.trim() ||
+								(boardType === "status" && !statusValue.trim()) ||
+								submitting
+							}
+						>
+							{submitting
+								? "Creating..."
+								: boardType === "status"
+									? "Add Status"
+									: "Add Category"}
+						</Button>
+					</div>
+				</form>
+			</div>
+		</div>
+	);
+}
+
+// ===========================================================================
+// CreateBoardModal
+// ===========================================================================
+
+function CreateBoardModal({
+	onClose,
+	onCreated,
+}: {
+	onClose: () => void;
+	onCreated: (name: string, type: "status" | "category") => void;
+}) {
+	const [name, setName] = useState("");
+	const [type, setType] = useState<"status" | "category">("status");
+	const [submitting, setSubmitting] = useState(false);
+
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		if (!name.trim()) return;
+		setSubmitting(true);
+		await onCreated(name.trim(), type);
+		setSubmitting(false);
+	};
+
+	return (
+		<div
+			className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+			onClick={onClose}
+		>
+			<div
+				className="bg-background border border-border rounded-lg shadow-xl w-full max-w-sm mx-4"
+				onClick={(e) => e.stopPropagation()}
+			>
+				<div className="px-6 py-4 border-b border-border">
+					<h2 className="text-lg font-semibold">Create Board</h2>
+					<p className="text-sm text-muted-foreground mt-1">
+						Add a new board to this project.
+					</p>
+				</div>
+
+				<form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
+					<div>
+						<label className="block text-sm font-medium mb-1.5">
+							Board Name
+						</label>
+						<input
+							autoFocus
+							value={name}
+							onChange={(e) => setName(e.target.value)}
+							placeholder="e.g. Sprint 1, Feature Board"
+							className="w-full px-3 py-2 text-sm border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+						/>
+					</div>
+
+					<div>
+						<label className="block text-sm font-medium mb-1.5">
+							Board Type
+						</label>
+						<div className="flex gap-3">
+							<label
+								className={`flex-1 flex items-center gap-2 p-3 border rounded-md cursor-pointer transition-colors ${
+									type === "status"
+										? "border-primary bg-primary/5"
+										: "border-input hover:border-primary/50"
+								}`}
+							>
+								<input
+									type="radio"
+									name="boardType"
+									value="status"
+									checked={type === "status"}
+									onChange={() => setType("status")}
+									className="accent-primary"
+								/>
+								<div>
+									<div className="text-sm font-medium">Status Board</div>
+									<div className="text-xs text-muted-foreground">
+										Dragging updates task status
+									</div>
+								</div>
+							</label>
+							<label
+								className={`flex-1 flex items-center gap-2 p-3 border rounded-md cursor-pointer transition-colors ${
+									type === "category"
+										? "border-primary bg-primary/5"
+										: "border-input hover:border-primary/50"
+								}`}
+							>
+								<input
+									type="radio"
+									name="boardType"
+									value="category"
+									checked={type === "category"}
+									onChange={() => setType("category")}
+									className="accent-primary"
+								/>
+								<div>
+									<div className="text-sm font-medium">Category Board</div>
+									<div className="text-xs text-muted-foreground">
+										Dragging updates task category
+									</div>
+								</div>
+							</label>
+						</div>
+					</div>
+
+					<div className="flex justify-end gap-2 pt-2">
+						<Button
+							type="button"
+							variant="ghost"
+							onClick={onClose}
+							disabled={submitting}
+						>
+							Cancel
+						</Button>
 						<Button type="submit" disabled={!name.trim() || submitting}>
-							{submitting ? "Creating..." : "Add Category"}
+							{submitting ? "Creating..." : "Create Board"}
 						</Button>
 					</div>
 				</form>

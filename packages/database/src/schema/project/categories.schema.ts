@@ -20,16 +20,17 @@ export const categories = pgTable(
 		name: text("name").notNull(),
 		color: text("color"),
 		sortOrder: integer("sort_order").default(0).notNull(),
+		statusValue: text("status_value"),
 		wipLimit: integer("wip_limit"),
-		createdAt: timestamp("created_at", {withTimezone: true}).defaultNow().notNull(),
+		createdAt: timestamp("created_at", {withTimezone: true})
+			.defaultNow()
+			.notNull(),
 		updatedAt: timestamp("updated_at", {withTimezone: true})
 			.defaultNow()
 			.$onUpdate(() => new Date())
 			.notNull(),
 	},
-	(table) => [
-		index("categories_boardId_idx").on(table.boardId),
-	],
+	(table) => [index("categories_boardId_idx").on(table.boardId)]
 );
 
 export type Category = typeof categories.$inferSelect;

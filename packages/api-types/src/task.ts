@@ -2,8 +2,14 @@ import {z} from "zod";
 
 import {uuidv4Schema} from "./common.js";
 
-export const taskPriorityEnum = z.enum(["urgent", "high", "medium", "low", "none"]);
-export const taskStatusEnum = z.enum(["open", "in_progress", "review", "done", "closed"]);
+export const taskPriorityEnum = z.enum([
+	"urgent",
+	"high",
+	"medium",
+	"low",
+	"none",
+]);
+export const taskStatusEnum = z.string().min(1);
 export const taskEffortLevelEnum = z.enum(["low", "medium", "high"]);
 
 export const taskSchema = z.object({
@@ -64,10 +70,12 @@ export const moveTaskBodySchema = z.object({
 });
 
 export const reorderTasksBodySchema = z.object({
-	tasks: z.array(z.object({
-		id: uuidv4Schema,
-		sortOrder: z.number(),
-	})),
+	tasks: z.array(
+		z.object({
+			id: uuidv4Schema,
+			sortOrder: z.number(),
+		})
+	),
 });
 
 export const taskResponseSchema = taskSchema;

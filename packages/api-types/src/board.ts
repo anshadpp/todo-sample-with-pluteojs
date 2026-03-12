@@ -2,11 +2,14 @@ import {z} from "zod";
 
 import {uuidv4Schema} from "./common.js";
 
+export const boardTypeSchema = z.enum(["status", "category"]);
+
 export const boardSchema = z.object({
 	id: uuidv4Schema,
 	projectId: uuidv4Schema,
 	name: z.string().min(1, "Name is required"),
 	description: z.string().nullable(),
+	type: boardTypeSchema,
 	isDefault: z.boolean(),
 	sortOrder: z.number(),
 	createdAt: z.string().datetime(),
@@ -16,6 +19,7 @@ export const boardSchema = z.object({
 export const createBoardBodySchema = z.object({
 	name: z.string().min(1, "Name is required"),
 	description: z.string().optional(),
+	type: boardTypeSchema.optional(),
 });
 
 export const updateBoardBodySchema = z.object({
@@ -26,6 +30,7 @@ export const updateBoardBodySchema = z.object({
 export const boardResponseSchema = boardSchema;
 export const boardListResponseSchema = z.array(boardSchema);
 
+export type BoardType = z.infer<typeof boardTypeSchema>;
 export type BoardItem = z.infer<typeof boardSchema>;
 export type CreateBoardBody = z.infer<typeof createBoardBodySchema>;
 export type UpdateBoardBody = z.infer<typeof updateBoardBodySchema>;

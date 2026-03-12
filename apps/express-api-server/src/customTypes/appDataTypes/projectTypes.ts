@@ -32,6 +32,7 @@ export interface iBoard {
 	projectId: string;
 	name: string;
 	description: string | null;
+	type: "status" | "category";
 	isDefault: boolean;
 	sortOrder: number;
 	createdAt: string;
@@ -41,6 +42,7 @@ export interface iBoard {
 export interface iCreateBoardDTO {
 	name: string;
 	description?: string;
+	type?: "status" | "category";
 }
 
 export interface iUpdateBoardDTO {
@@ -53,6 +55,7 @@ export interface iCategory {
 	boardId: string;
 	name: string;
 	color: string | null;
+	statusValue: string | null;
 	sortOrder: number;
 	wipLimit: number | null;
 	createdAt: string;
@@ -62,12 +65,14 @@ export interface iCategory {
 export interface iCreateCategoryDTO {
 	name: string;
 	color?: string;
+	statusValue?: string;
 	wipLimit?: number;
 }
 
 export interface iUpdateCategoryDTO {
 	name?: string;
 	color?: string | null;
+	statusValue?: string | null;
 	sortOrder?: number;
 	wipLimit?: number | null;
 }

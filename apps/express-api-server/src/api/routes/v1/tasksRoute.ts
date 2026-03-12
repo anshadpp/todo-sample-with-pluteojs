@@ -49,9 +49,16 @@ registry.registerPath({
 	summary: "Create a task",
 	tags: ["Tasks"],
 	security: [{bearerAuth: []}],
-	request: {body: {content: {"application/json": {schema: createTaskBodySchema}}}},
+	request: {
+		body: {content: {"application/json": {schema: createTaskBodySchema}}},
+	},
 	responses: {
-		201: {description: "Task created", content: {"application/json": {schema: SuccessEnvelope(taskResponseSchema)}}},
+		201: {
+			description: "Task created",
+			content: {
+				"application/json": {schema: SuccessEnvelope(taskResponseSchema)},
+			},
+		},
 	},
 });
 
@@ -62,7 +69,12 @@ registry.registerPath({
 	tags: ["Tasks"],
 	security: [{bearerAuth: []}],
 	responses: {
-		200: {description: "Tasks retrieved", content: {"application/json": {schema: SuccessEnvelope(taskListResponseSchema)}}},
+		200: {
+			description: "Tasks retrieved",
+			content: {
+				"application/json": {schema: SuccessEnvelope(taskListResponseSchema)},
+			},
+		},
 	},
 });
 
@@ -73,8 +85,16 @@ registry.registerPath({
 	tags: ["Tasks"],
 	security: [{bearerAuth: []}],
 	responses: {
-		200: {description: "Task retrieved", content: {"application/json": {schema: SuccessEnvelope(taskResponseSchema)}}},
-		404: {description: "Not found", content: {"application/json": {schema: ErrorEnvelope}}},
+		200: {
+			description: "Task retrieved",
+			content: {
+				"application/json": {schema: SuccessEnvelope(taskResponseSchema)},
+			},
+		},
+		404: {
+			description: "Not found",
+			content: {"application/json": {schema: ErrorEnvelope}},
+		},
 	},
 });
 
@@ -84,10 +104,20 @@ registry.registerPath({
 	summary: "Update a task",
 	tags: ["Tasks"],
 	security: [{bearerAuth: []}],
-	request: {body: {content: {"application/json": {schema: updateTaskBodySchema}}}},
+	request: {
+		body: {content: {"application/json": {schema: updateTaskBodySchema}}},
+	},
 	responses: {
-		200: {description: "Task updated", content: {"application/json": {schema: SuccessEnvelope(taskResponseSchema)}}},
-		404: {description: "Not found", content: {"application/json": {schema: ErrorEnvelope}}},
+		200: {
+			description: "Task updated",
+			content: {
+				"application/json": {schema: SuccessEnvelope(taskResponseSchema)},
+			},
+		},
+		404: {
+			description: "Not found",
+			content: {"application/json": {schema: ErrorEnvelope}},
+		},
 	},
 });
 
@@ -97,9 +127,16 @@ registry.registerPath({
 	summary: "Move task to another category",
 	tags: ["Tasks"],
 	security: [{bearerAuth: []}],
-	request: {body: {content: {"application/json": {schema: moveTaskBodySchema}}}},
+	request: {
+		body: {content: {"application/json": {schema: moveTaskBodySchema}}},
+	},
 	responses: {
-		200: {description: "Task moved", content: {"application/json": {schema: SuccessEnvelope(taskResponseSchema)}}},
+		200: {
+			description: "Task moved",
+			content: {
+				"application/json": {schema: SuccessEnvelope(taskResponseSchema)},
+			},
+		},
 	},
 });
 
@@ -109,7 +146,9 @@ registry.registerPath({
 	summary: "Reorder tasks",
 	tags: ["Tasks"],
 	security: [{bearerAuth: []}],
-	request: {body: {content: {"application/json": {schema: reorderTasksBodySchema}}}},
+	request: {
+		body: {content: {"application/json": {schema: reorderTasksBodySchema}}},
+	},
 	responses: {
 		200: {description: "Tasks reordered"},
 	},
@@ -123,7 +162,10 @@ registry.registerPath({
 	security: [{bearerAuth: []}],
 	responses: {
 		200: {description: "Task deleted"},
-		404: {description: "Not found", content: {"application/json": {schema: ErrorEnvelope}}},
+		404: {
+			description: "Not found",
+			content: {"application/json": {schema: ErrorEnvelope}},
+		},
 	},
 });
 
@@ -135,7 +177,14 @@ registry.registerPath({
 	tags: ["Comments"],
 	security: [{bearerAuth: []}],
 	responses: {
-		200: {description: "Comments retrieved", content: {"application/json": {schema: SuccessEnvelope(commentListResponseSchema)}}},
+		200: {
+			description: "Comments retrieved",
+			content: {
+				"application/json": {
+					schema: SuccessEnvelope(commentListResponseSchema),
+				},
+			},
+		},
 	},
 });
 
@@ -145,9 +194,16 @@ registry.registerPath({
 	summary: "Add a comment",
 	tags: ["Comments"],
 	security: [{bearerAuth: []}],
-	request: {body: {content: {"application/json": {schema: createCommentBodySchema}}}},
+	request: {
+		body: {content: {"application/json": {schema: createCommentBodySchema}}},
+	},
 	responses: {
-		201: {description: "Comment created", content: {"application/json": {schema: SuccessEnvelope(commentResponseSchema)}}},
+		201: {
+			description: "Comment created",
+			content: {
+				"application/json": {schema: SuccessEnvelope(commentResponseSchema)},
+			},
+		},
 	},
 });
 
@@ -157,9 +213,16 @@ registry.registerPath({
 	summary: "Edit a comment",
 	tags: ["Comments"],
 	security: [{bearerAuth: []}],
-	request: {body: {content: {"application/json": {schema: updateCommentBodySchema}}}},
+	request: {
+		body: {content: {"application/json": {schema: updateCommentBodySchema}}},
+	},
 	responses: {
-		200: {description: "Comment updated", content: {"application/json": {schema: SuccessEnvelope(commentResponseSchema)}}},
+		200: {
+			description: "Comment updated",
+			content: {
+				"application/json": {schema: SuccessEnvelope(commentResponseSchema)},
+			},
+		},
 	},
 });
 
@@ -182,7 +245,12 @@ registry.registerPath({
 	tags: ["Labels"],
 	security: [{bearerAuth: []}],
 	responses: {
-		200: {description: "Labels retrieved", content: {"application/json": {schema: SuccessEnvelope(labelListResponseSchema)}}},
+		200: {
+			description: "Labels retrieved",
+			content: {
+				"application/json": {schema: SuccessEnvelope(labelListResponseSchema)},
+			},
+		},
 	},
 });
 
@@ -192,9 +260,16 @@ registry.registerPath({
 	summary: "Create a label",
 	tags: ["Labels"],
 	security: [{bearerAuth: []}],
-	request: {body: {content: {"application/json": {schema: createLabelBodySchema}}}},
+	request: {
+		body: {content: {"application/json": {schema: createLabelBodySchema}}},
+	},
 	responses: {
-		201: {description: "Label created", content: {"application/json": {schema: SuccessEnvelope(labelResponseSchema)}}},
+		201: {
+			description: "Label created",
+			content: {
+				"application/json": {schema: SuccessEnvelope(labelResponseSchema)},
+			},
+		},
 	},
 });
 
@@ -224,7 +299,14 @@ registry.registerPath({
 	tags: ["Activity"],
 	security: [{bearerAuth: []}],
 	responses: {
-		200: {description: "Activity retrieved", content: {"application/json": {schema: SuccessEnvelope(activityListResponseSchema)}}},
+		200: {
+			description: "Activity retrieved",
+			content: {
+				"application/json": {
+					schema: SuccessEnvelope(activityListResponseSchema),
+				},
+			},
+		},
 	},
 });
 
@@ -236,7 +318,14 @@ registry.registerPath({
 	tags: ["Task Contents"],
 	security: [{bearerAuth: []}],
 	responses: {
-		200: {description: "Contents retrieved", content: {"application/json": {schema: SuccessEnvelope(taskContentListResponseSchema)}}},
+		200: {
+			description: "Contents retrieved",
+			content: {
+				"application/json": {
+					schema: SuccessEnvelope(taskContentListResponseSchema),
+				},
+			},
+		},
 	},
 });
 
@@ -246,9 +335,20 @@ registry.registerPath({
 	summary: "Add content to task",
 	tags: ["Task Contents"],
 	security: [{bearerAuth: []}],
-	request: {body: {content: {"application/json": {schema: createTaskContentBodySchema}}}},
+	request: {
+		body: {
+			content: {"application/json": {schema: createTaskContentBodySchema}},
+		},
+	},
 	responses: {
-		201: {description: "Content created", content: {"application/json": {schema: SuccessEnvelope(taskContentResponseSchema)}}},
+		201: {
+			description: "Content created",
+			content: {
+				"application/json": {
+					schema: SuccessEnvelope(taskContentResponseSchema),
+				},
+			},
+		},
 	},
 });
 
@@ -258,9 +358,20 @@ registry.registerPath({
 	summary: "Update task content",
 	tags: ["Task Contents"],
 	security: [{bearerAuth: []}],
-	request: {body: {content: {"application/json": {schema: updateTaskContentBodySchema}}}},
+	request: {
+		body: {
+			content: {"application/json": {schema: updateTaskContentBodySchema}},
+		},
+	},
 	responses: {
-		200: {description: "Content updated", content: {"application/json": {schema: SuccessEnvelope(taskContentResponseSchema)}}},
+		200: {
+			description: "Content updated",
+			content: {
+				"application/json": {
+					schema: SuccessEnvelope(taskContentResponseSchema),
+				},
+			},
+		},
 	},
 });
 
@@ -286,9 +397,15 @@ export default (route: Router): void => {
 			logger.debug(uniqueRequestId, "Create task request received");
 			try {
 				const userId = req.user?.id;
-				if (!userId) {throw new Error("User ID not found in session");}
+				if (!userId) {
+					throw new Error("User ID not found in session");
+				}
 
-				const data = await tasksService.createTask(userId, req.params.projectId!, req.body);
+				const data = await tasksService.createTask(
+					userId,
+					req.params.projectId!,
+					req.body
+				);
 				await activityService.logActivity(data.id, userId, "created");
 
 				// Notify assignee
@@ -299,13 +416,15 @@ export default (route: Router): void => {
 						`You were assigned to "${data.title}"`,
 						undefined,
 						"task",
-						data.id,
+						data.id
 					);
 				}
 
 				res.ok(data, 201);
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.get(
@@ -315,10 +434,31 @@ export default (route: Router): void => {
 			const uniqueRequestId = expressUtil.parseUniqueRequestId(req);
 			logger.debug(uniqueRequestId, "List tasks request received");
 			try {
-				const data = await tasksService.getTasksByProject(req.params.projectId!);
+				const data = await tasksService.getTasksByProject(
+					req.params.projectId!
+				);
 				res.ok(data);
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
+	);
+
+	// Reorder must be registered before :taskId to avoid matching "reorder" as a UUID
+	route.patch(
+		"/tasks/reorder",
+		isAuthorized,
+		validateBody(reorderTasksBodySchema),
+		async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+			const uniqueRequestId = expressUtil.parseUniqueRequestId(req);
+			logger.debug(uniqueRequestId, "Reorder tasks request received");
+			try {
+				await tasksService.reorderTasks(req.body.tasks);
+				res.ok({message: "Tasks reordered successfully"});
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.get(
@@ -330,8 +470,10 @@ export default (route: Router): void => {
 			try {
 				const data = await tasksService.getTask(req.params.taskId!);
 				res.ok(data);
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.patch(
@@ -343,11 +485,16 @@ export default (route: Router): void => {
 			logger.debug(uniqueRequestId, "Update task request received");
 			try {
 				const userId = req.user?.id;
-				if (!userId) {throw new Error("User ID not found in session");}
+				if (!userId) {
+					throw new Error("User ID not found in session");
+				}
 
 				// Get old task for activity logging
 				const oldTask = await tasksService.getTask(req.params.taskId!);
-				const data = await tasksService.updateTask(req.params.taskId!, req.body);
+				const data = await tasksService.updateTask(
+					req.params.taskId!,
+					req.body
+				);
 
 				// Log field changes
 				for (const key of Object.keys(req.body)) {
@@ -355,28 +502,37 @@ export default (route: Router): void => {
 					const newVal = (data as unknown as Record<string, unknown>)[key];
 					if (oldVal !== newVal) {
 						await activityService.logActivity(
-							data.id, userId, "updated", key,
-							oldVal != null ? String(oldVal) : null as unknown as string,
-							newVal != null ? String(newVal) : null as unknown as string,
+							data.id,
+							userId,
+							"updated",
+							key,
+							oldVal != null ? String(oldVal) : (null as unknown as string),
+							newVal != null ? String(newVal) : (null as unknown as string)
 						);
 					}
 				}
 
 				// Notify on assignment change
-				if (req.body.assigneeId && req.body.assigneeId !== userId && req.body.assigneeId !== oldTask.assigneeId) {
+				if (
+					req.body.assigneeId &&
+					req.body.assigneeId !== userId &&
+					req.body.assigneeId !== oldTask.assigneeId
+				) {
 					await notificationsService.createNotification(
 						req.body.assigneeId,
 						"task_assigned",
 						`You were assigned to "${data.title}"`,
 						undefined,
 						"task",
-						data.id,
+						data.id
 					);
 				}
 
 				res.ok(data);
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.patch(
@@ -388,32 +544,26 @@ export default (route: Router): void => {
 			logger.debug(uniqueRequestId, "Move task request received");
 			try {
 				const userId = req.user?.id;
-				if (!userId) {throw new Error("User ID not found in session");}
+				if (!userId) {
+					throw new Error("User ID not found in session");
+				}
 
 				const oldTask = await tasksService.getTask(req.params.taskId!);
 				const data = await tasksService.moveTask(req.params.taskId!, req.body);
 				await activityService.logActivity(
-					data.id, userId, "moved", "categoryId",
-					oldTask.categoryId ?? undefined, data.categoryId ?? undefined,
+					data.id,
+					userId,
+					"moved",
+					"categoryId",
+					oldTask.categoryId ?? undefined,
+					data.categoryId ?? undefined
 				);
 
 				res.ok(data);
-			} catch (error) { next(error); }
-		},
-	);
-
-	route.patch(
-		"/tasks/reorder",
-		isAuthorized,
-		validateBody(reorderTasksBodySchema),
-		async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-			const uniqueRequestId = expressUtil.parseUniqueRequestId(req);
-			logger.debug(uniqueRequestId, "Reorder tasks request received");
-			try {
-				await tasksService.reorderTasks(req.body.tasks);
-				res.ok({message: "Tasks reordered successfully"});
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.delete(
@@ -425,8 +575,10 @@ export default (route: Router): void => {
 			try {
 				await tasksService.deleteTask(req.params.taskId!);
 				res.ok({message: "Task deleted successfully"});
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	// Comments
@@ -437,8 +589,10 @@ export default (route: Router): void => {
 			try {
 				const data = await commentsService.getComments(req.params.taskId!);
 				res.ok(data);
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.post(
@@ -448,14 +602,22 @@ export default (route: Router): void => {
 		async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 			try {
 				const userId = req.user?.id;
-				if (!userId) {throw new Error("User ID not found in session");}
+				if (!userId) {
+					throw new Error("User ID not found in session");
+				}
 
-				const data = await commentsService.createComment(userId, req.params.taskId!, req.body);
+				const data = await commentsService.createComment(
+					userId,
+					req.params.taskId!,
+					req.body
+				);
 				await activityService.logActivity(data.taskId, userId, "commented");
 
 				res.ok(data, 201);
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.patch(
@@ -465,12 +627,20 @@ export default (route: Router): void => {
 		async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 			try {
 				const userId = req.user?.id;
-				if (!userId) {throw new Error("User ID not found in session");}
+				if (!userId) {
+					throw new Error("User ID not found in session");
+				}
 
-				const data = await commentsService.updateComment(userId, req.params.commentId!, req.body);
+				const data = await commentsService.updateComment(
+					userId,
+					req.params.commentId!,
+					req.body
+				);
 				res.ok(data);
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.delete(
@@ -479,12 +649,16 @@ export default (route: Router): void => {
 		async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 			try {
 				const userId = req.user?.id;
-				if (!userId) {throw new Error("User ID not found in session");}
+				if (!userId) {
+					throw new Error("User ID not found in session");
+				}
 
 				await commentsService.deleteComment(userId, req.params.commentId!);
 				res.ok({message: "Comment deleted successfully"});
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	// Labels
@@ -495,8 +669,10 @@ export default (route: Router): void => {
 			try {
 				const data = await labelsService.getLabels(req.params.projectId!);
 				res.ok(data);
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.post(
@@ -505,10 +681,15 @@ export default (route: Router): void => {
 		validateBody(createLabelBodySchema),
 		async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 			try {
-				const data = await labelsService.createLabel(req.params.projectId!, req.body);
+				const data = await labelsService.createLabel(
+					req.params.projectId!,
+					req.body
+				);
 				res.ok(data, 201);
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.post(
@@ -516,10 +697,15 @@ export default (route: Router): void => {
 		isAuthorized,
 		async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 			try {
-				await labelsService.addLabelToTask(req.params.taskId!, req.params.labelId!);
+				await labelsService.addLabelToTask(
+					req.params.taskId!,
+					req.params.labelId!
+				);
 				res.ok({message: "Label added to task"}, 201);
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.delete(
@@ -527,10 +713,15 @@ export default (route: Router): void => {
 		isAuthorized,
 		async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 			try {
-				await labelsService.removeLabelFromTask(req.params.taskId!, req.params.labelId!);
+				await labelsService.removeLabelFromTask(
+					req.params.taskId!,
+					req.params.labelId!
+				);
 				res.ok({message: "Label removed from task"});
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	// Activity
@@ -541,8 +732,10 @@ export default (route: Router): void => {
 			try {
 				const data = await activityService.getActivities(req.params.taskId!);
 				res.ok(data);
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	// Task Dependencies
@@ -553,8 +746,10 @@ export default (route: Router): void => {
 			try {
 				const data = await tasksService.getDependencies(req.params.taskId!);
 				res.ok(data);
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.post(
@@ -563,7 +758,9 @@ export default (route: Router): void => {
 		async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 			try {
 				const userId = req.user?.id;
-				if (!userId) {throw new Error("User ID not found in session");}
+				if (!userId) {
+					throw new Error("User ID not found in session");
+				}
 
 				const {dependsOnTaskId, dependencyType} = req.body;
 				if (!dependsOnTaskId) {
@@ -574,17 +771,23 @@ export default (route: Router): void => {
 				const data = await tasksService.addDependency(
 					req.params.taskId!,
 					dependsOnTaskId,
-					dependencyType || "blocks",
+					dependencyType || "blocks"
 				);
 
 				await activityService.logActivity(
-					req.params.taskId!, userId, "added_dependency",
-					"dependency", null as unknown as string, dependsOnTaskId,
+					req.params.taskId!,
+					userId,
+					"added_dependency",
+					"dependency",
+					null as unknown as string,
+					dependsOnTaskId
 				);
 
 				res.ok(data, 201);
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.delete(
@@ -593,17 +796,23 @@ export default (route: Router): void => {
 		async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 			try {
 				const userId = req.user?.id;
-				if (!userId) {throw new Error("User ID not found in session");}
+				if (!userId) {
+					throw new Error("User ID not found in session");
+				}
 
 				await tasksService.removeDependency(req.params.dependencyId!);
 
 				await activityService.logActivity(
-					req.params.taskId!, userId, "removed_dependency",
+					req.params.taskId!,
+					userId,
+					"removed_dependency"
 				);
 
 				res.ok({message: "Dependency removed successfully"});
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	// Task Contents (code snippets, docs, links, notes)
@@ -614,8 +823,10 @@ export default (route: Router): void => {
 			try {
 				const data = await taskContentsService.getContents(req.params.taskId!);
 				res.ok(data);
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.post(
@@ -625,14 +836,26 @@ export default (route: Router): void => {
 		async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 			try {
 				const userId = req.user?.id;
-				if (!userId) {throw new Error("User ID not found in session");}
+				if (!userId) {
+					throw new Error("User ID not found in session");
+				}
 
-				const data = await taskContentsService.createContent(userId, req.params.taskId!, req.body);
-				await activityService.logActivity(req.params.taskId!, userId, "added_content");
+				const data = await taskContentsService.createContent(
+					userId,
+					req.params.taskId!,
+					req.body
+				);
+				await activityService.logActivity(
+					req.params.taskId!,
+					userId,
+					"added_content"
+				);
 
 				res.ok(data, 201);
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.patch(
@@ -642,12 +865,20 @@ export default (route: Router): void => {
 		async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 			try {
 				const userId = req.user?.id;
-				if (!userId) {throw new Error("User ID not found in session");}
+				if (!userId) {
+					throw new Error("User ID not found in session");
+				}
 
-				const data = await taskContentsService.updateContent(userId, req.params.contentId!, req.body);
+				const data = await taskContentsService.updateContent(
+					userId,
+					req.params.contentId!,
+					req.body
+				);
 				res.ok(data);
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.delete(
@@ -656,13 +887,21 @@ export default (route: Router): void => {
 		async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 			try {
 				const userId = req.user?.id;
-				if (!userId) {throw new Error("User ID not found in session");}
+				if (!userId) {
+					throw new Error("User ID not found in session");
+				}
 
 				await taskContentsService.deleteContent(userId, req.params.contentId!);
-				await activityService.logActivity(req.params.taskId!, userId, "removed_content");
+				await activityService.logActivity(
+					req.params.taskId!,
+					userId,
+					"removed_content"
+				);
 
 				res.ok({message: "Content deleted successfully"});
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 };
