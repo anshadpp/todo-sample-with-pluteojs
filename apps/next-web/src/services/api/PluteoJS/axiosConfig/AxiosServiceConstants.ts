@@ -159,6 +159,17 @@ export const apiEndpoints = Object.freeze({
 		get: () => "/api/v1/users/",
 		update: () => "/api/v1/users/",
 	},
+	autoSortRules: {
+		list: (projectId: string) =>
+			`/api/v1/projects/${projectId}/auto-sort-rules/`,
+		create: (projectId: string) =>
+			`/api/v1/projects/${projectId}/auto-sort-rules/`,
+		get: (ruleId: string) => `/api/v1/auto-sort-rules/${ruleId}`,
+		update: (ruleId: string) => `/api/v1/auto-sort-rules/${ruleId}`,
+		delete: (ruleId: string) => `/api/v1/auto-sort-rules/${ruleId}`,
+		evaluate: (projectId: string) =>
+			`/api/v1/projects/${projectId}/auto-sort-rules/evaluate`,
+	},
 	notifications: {
 		list: () => "/api/v1/notifications/",
 		unreadCount: () => "/api/v1/notifications/unread-count",
