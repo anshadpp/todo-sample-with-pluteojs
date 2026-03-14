@@ -6,7 +6,9 @@ import {z} from "zod";
  */
 export const envSchema = z.object({
 	// Core better-auth settings
-	BETTER_AUTH_SECRET: z.string().min(64, "Secret must be at least 64 characters"),
+	BETTER_AUTH_SECRET: z
+		.string()
+		.min(64, "Secret must be at least 64 characters"),
 	BETTER_AUTH_BASE_URL: z.string().url("Must be a valid URL"),
 	BETTER_AUTH_BASE_PATH: z.string().default("/api/auth"),
 
@@ -15,7 +17,9 @@ export const envSchema = z.object({
 		.enum(["true", "false"])
 		.default("false")
 		.transform((val) => val === "true"),
-	BETTER_AUTH_COOKIE_SAME_SITE: z.enum(["lax", "strict", "none"]).default("lax"),
+	BETTER_AUTH_COOKIE_SAME_SITE: z
+		.enum(["lax", "strict", "none"])
+		.default("lax"),
 
 	// Response envelope
 	BETTER_AUTH_ENABLE_RESPONSE_ENVELOPE: z

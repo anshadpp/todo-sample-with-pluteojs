@@ -92,15 +92,26 @@ export default (route: Router): void => {
 					throw new Error("User ID not found in session");
 				}
 
-				const {name, image} = req.body as {name?: string; image?: string | null};
+				const {name, image} = req.body as {
+					name?: string;
+					image?: string | null;
+				};
 
 				const updateData: Record<string, unknown> = {};
-				if (name !== undefined) {updateData.name = name;}
-				if (image !== undefined) {updateData.image = image;}
+				if (name !== undefined) {
+					updateData.name = name;
+				}
+				if (image !== undefined) {
+					updateData.image = image;
+				}
 
 				if (Object.keys(updateData).length === 0) {
 					res.fail(
-						{error: "NoFieldsToUpdate", message: "No fields to update", details: null},
+						{
+							error: "NoFieldsToUpdate",
+							message: "No fields to update",
+							details: null,
+						},
 						400 as never
 					);
 					return;

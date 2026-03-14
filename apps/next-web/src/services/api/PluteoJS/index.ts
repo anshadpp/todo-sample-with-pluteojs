@@ -12,6 +12,7 @@ import LabelService from "./LabelService";
 import ActivityService from "./ActivityService";
 import MemberService from "./MemberService";
 import UserService from "./UserService";
+import AutoSortRuleService from "./AutoSortRuleService";
 
 const exampleService = ExampleService(apiServer);
 const authService = AuthService(apiServer);
@@ -26,6 +27,7 @@ const labelService = LabelService(apiServer);
 const activityService = ActivityService(apiServer);
 const memberService = MemberService(apiServer);
 const userService = UserService(apiServer);
+const autoSortRuleService = AutoSortRuleService(apiServer);
 
 export {
 	injectStore,
@@ -42,4 +44,5 @@ export {
 	activityService,
 	memberService,
 	userService,
+	autoSortRuleService,
 };

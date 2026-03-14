@@ -14,7 +14,9 @@ import ms from "ms";
  * @param str - The string value to parse.
  * @returns The parsed boolean value.
  */
-export function parseBooleanFromString(str: string | undefined | null): boolean {
+export function parseBooleanFromString(
+	str: string | undefined | null
+): boolean {
 	if (str === undefined || str === null) {
 		return false;
 	}

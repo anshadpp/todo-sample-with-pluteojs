@@ -18,15 +18,18 @@ export const projects = pgTable(
 		name: text("name").notNull(),
 		description: text("description"),
 		slug: text("slug").notNull(),
-		organizationId: uuid("organization_id")
-			.references(() => organizations.id, {onDelete: "cascade"}),
+		organizationId: uuid("organization_id").references(() => organizations.id, {
+			onDelete: "cascade",
+		}),
 		createdById: uuid("created_by_id")
 			.notNull()
 			.references(() => users.id, {onDelete: "cascade"}),
 		color: text("color"),
 		icon: text("icon"),
 		isArchived: boolean("is_archived").default(false).notNull(),
-		createdAt: timestamp("created_at", {withTimezone: true}).defaultNow().notNull(),
+		createdAt: timestamp("created_at", {withTimezone: true})
+			.defaultNow()
+			.notNull(),
 		updatedAt: timestamp("updated_at", {withTimezone: true})
 			.defaultNow()
 			.$onUpdate(() => new Date())
@@ -36,7 +39,7 @@ export const projects = pgTable(
 		index("projects_organizationId_idx").on(table.organizationId),
 		index("projects_createdById_idx").on(table.createdById),
 		index("projects_slug_idx").on(table.slug),
-	],
+	]
 );
 
 export type Project = typeof projects.$inferSelect;

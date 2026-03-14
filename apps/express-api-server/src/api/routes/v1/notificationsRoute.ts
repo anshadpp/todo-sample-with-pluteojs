@@ -21,7 +21,14 @@ registry.registerPath({
 	tags: ["Notifications"],
 	security: [{bearerAuth: []}],
 	responses: {
-		200: {description: "Notifications retrieved", content: {"application/json": {schema: SuccessEnvelope(notificationListResponseSchema)}}},
+		200: {
+			description: "Notifications retrieved",
+			content: {
+				"application/json": {
+					schema: SuccessEnvelope(notificationListResponseSchema),
+				},
+			},
+		},
 	},
 });
 
@@ -32,7 +39,14 @@ registry.registerPath({
 	tags: ["Notifications"],
 	security: [{bearerAuth: []}],
 	responses: {
-		200: {description: "Unread count", content: {"application/json": {schema: SuccessEnvelope(unreadCountResponseSchema)}}},
+		200: {
+			description: "Unread count",
+			content: {
+				"application/json": {
+					schema: SuccessEnvelope(unreadCountResponseSchema),
+				},
+			},
+		},
 	},
 });
 
@@ -67,12 +81,16 @@ export default (route: Router): void => {
 			logger.debug(uniqueRequestId, "List notifications request received");
 			try {
 				const userId = req.user?.id;
-				if (!userId) {throw new Error("User ID not found in session");}
+				if (!userId) {
+					throw new Error("User ID not found in session");
+				}
 
 				const data = await notificationsService.getNotifications(userId);
 				res.ok(data);
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.get(
@@ -81,12 +99,16 @@ export default (route: Router): void => {
 		async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 			try {
 				const userId = req.user?.id;
-				if (!userId) {throw new Error("User ID not found in session");}
+				if (!userId) {
+					throw new Error("User ID not found in session");
+				}
 
 				const count = await notificationsService.getUnreadCount(userId);
 				res.ok({count});
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.patch(
@@ -95,12 +117,16 @@ export default (route: Router): void => {
 		async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 			try {
 				const userId = req.user?.id;
-				if (!userId) {throw new Error("User ID not found in session");}
+				if (!userId) {
+					throw new Error("User ID not found in session");
+				}
 
 				await notificationsService.markAllAsRead(userId);
 				res.ok({message: "All notifications marked as read"});
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.patch(
@@ -109,11 +135,18 @@ export default (route: Router): void => {
 		async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 			try {
 				const userId = req.user?.id;
-				if (!userId) {throw new Error("User ID not found in session");}
+				if (!userId) {
+					throw new Error("User ID not found in session");
+				}
 
-				await notificationsService.markAsRead(req.params.notificationId!, userId);
+				await notificationsService.markAsRead(
+					req.params.notificationId!,
+					userId
+				);
 				res.ok({message: "Notification marked as read"});
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 };

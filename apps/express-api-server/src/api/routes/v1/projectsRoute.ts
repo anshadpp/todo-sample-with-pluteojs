@@ -28,8 +28,16 @@ registry.registerPath({
 		body: {content: {"application/json": {schema: createProjectBodySchema}}},
 	},
 	responses: {
-		201: {description: "Project created", content: {"application/json": {schema: SuccessEnvelope(projectResponseSchema)}}},
-		401: {description: "Unauthorized", content: {"application/json": {schema: ErrorEnvelope}}},
+		201: {
+			description: "Project created",
+			content: {
+				"application/json": {schema: SuccessEnvelope(projectResponseSchema)},
+			},
+		},
+		401: {
+			description: "Unauthorized",
+			content: {"application/json": {schema: ErrorEnvelope}},
+		},
 	},
 });
 
@@ -37,12 +45,23 @@ registry.registerPath({
 	method: "get",
 	path: "/api/v1/projects/",
 	summary: "List projects",
-	description: "Retrieves projects. If x-organization-id header is present, returns org projects. Otherwise returns personal projects.",
+	description:
+		"Retrieves projects. If x-organization-id header is present, returns org projects. Otherwise returns personal projects.",
 	tags: ["Projects"],
 	security: [{bearerAuth: []}],
 	responses: {
-		200: {description: "Projects retrieved", content: {"application/json": {schema: SuccessEnvelope(projectListResponseSchema)}}},
-		401: {description: "Unauthorized", content: {"application/json": {schema: ErrorEnvelope}}},
+		200: {
+			description: "Projects retrieved",
+			content: {
+				"application/json": {
+					schema: SuccessEnvelope(projectListResponseSchema),
+				},
+			},
+		},
+		401: {
+			description: "Unauthorized",
+			content: {"application/json": {schema: ErrorEnvelope}},
+		},
 	},
 });
 
@@ -53,8 +72,16 @@ registry.registerPath({
 	tags: ["Projects"],
 	security: [{bearerAuth: []}],
 	responses: {
-		200: {description: "Project retrieved", content: {"application/json": {schema: SuccessEnvelope(projectResponseSchema)}}},
-		404: {description: "Not found", content: {"application/json": {schema: ErrorEnvelope}}},
+		200: {
+			description: "Project retrieved",
+			content: {
+				"application/json": {schema: SuccessEnvelope(projectResponseSchema)},
+			},
+		},
+		404: {
+			description: "Not found",
+			content: {"application/json": {schema: ErrorEnvelope}},
+		},
 	},
 });
 
@@ -68,8 +95,16 @@ registry.registerPath({
 		body: {content: {"application/json": {schema: updateProjectBodySchema}}},
 	},
 	responses: {
-		200: {description: "Project updated", content: {"application/json": {schema: SuccessEnvelope(projectResponseSchema)}}},
-		404: {description: "Not found", content: {"application/json": {schema: ErrorEnvelope}}},
+		200: {
+			description: "Project updated",
+			content: {
+				"application/json": {schema: SuccessEnvelope(projectResponseSchema)},
+			},
+		},
+		404: {
+			description: "Not found",
+			content: {"application/json": {schema: ErrorEnvelope}},
+		},
 	},
 });
 
@@ -80,8 +115,16 @@ registry.registerPath({
 	tags: ["Projects"],
 	security: [{bearerAuth: []}],
 	responses: {
-		200: {description: "Project deleted", content: {"application/json": {schema: SuccessEnvelope(projectResponseSchema)}}},
-		404: {description: "Not found", content: {"application/json": {schema: ErrorEnvelope}}},
+		200: {
+			description: "Project deleted",
+			content: {
+				"application/json": {schema: SuccessEnvelope(projectResponseSchema)},
+			},
+		},
+		404: {
+			description: "Not found",
+			content: {"application/json": {schema: ErrorEnvelope}},
+		},
 	},
 });
 
@@ -95,15 +138,22 @@ export default (route: Router): void => {
 			logger.debug(uniqueRequestId, "Create project request received");
 			try {
 				const userId = req.user?.id;
-				if (!userId) {throw new Error("User ID not found in session");}
-				const organizationId = (req.headers["x-organization-id"] as string) || null;
+				if (!userId) {
+					throw new Error("User ID not found in session");
+				}
+				const organizationId =
+					(req.headers["x-organization-id"] as string) || null;
 
-				const data = await projectsService.createProject(userId, organizationId, req.body);
+				const data = await projectsService.createProject(
+					userId,
+					organizationId,
+					req.body
+				);
 				res.ok(data, 201);
 			} catch (error) {
 				next(error);
 			}
-		},
+		}
 	);
 
 	route.get(
@@ -114,15 +164,18 @@ export default (route: Router): void => {
 			logger.debug(uniqueRequestId, "List projects request received");
 			try {
 				const userId = req.user?.id;
-				if (!userId) {throw new Error("User ID not found in session");}
-				const organizationId = (req.headers["x-organization-id"] as string) || null;
+				if (!userId) {
+					throw new Error("User ID not found in session");
+				}
+				const organizationId =
+					(req.headers["x-organization-id"] as string) || null;
 
 				const data = await projectsService.getProjects(userId, organizationId);
 				res.ok(data);
 			} catch (error) {
 				next(error);
 			}
-		},
+		}
 	);
 
 	route.get(
@@ -133,14 +186,19 @@ export default (route: Router): void => {
 			logger.debug(uniqueRequestId, "Get project request received");
 			try {
 				const userId = req.user?.id;
-				if (!userId) {throw new Error("User ID not found in session");}
+				if (!userId) {
+					throw new Error("User ID not found in session");
+				}
 
-				const data = await projectsService.getProject(req.params.projectId!, userId);
+				const data = await projectsService.getProject(
+					req.params.projectId!,
+					userId
+				);
 				res.ok(data);
 			} catch (error) {
 				next(error);
 			}
-		},
+		}
 	);
 
 	route.patch(
@@ -152,14 +210,20 @@ export default (route: Router): void => {
 			logger.debug(uniqueRequestId, "Update project request received");
 			try {
 				const userId = req.user?.id;
-				if (!userId) {throw new Error("User ID not found in session");}
+				if (!userId) {
+					throw new Error("User ID not found in session");
+				}
 
-				const data = await projectsService.updateProject(req.params.projectId!, userId, req.body);
+				const data = await projectsService.updateProject(
+					req.params.projectId!,
+					userId,
+					req.body
+				);
 				res.ok(data);
 			} catch (error) {
 				next(error);
 			}
-		},
+		}
 	);
 
 	route.delete(
@@ -170,13 +234,15 @@ export default (route: Router): void => {
 			logger.debug(uniqueRequestId, "Delete project request received");
 			try {
 				const userId = req.user?.id;
-				if (!userId) {throw new Error("User ID not found in session");}
+				if (!userId) {
+					throw new Error("User ID not found in session");
+				}
 
 				await projectsService.deleteProject(req.params.projectId!, userId);
 				res.ok({message: "Project deleted successfully"});
 			} catch (error) {
 				next(error);
 			}
-		},
+		}
 	);
 };

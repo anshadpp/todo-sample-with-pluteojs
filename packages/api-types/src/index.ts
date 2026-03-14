@@ -18,3 +18,4 @@ export * from "./label";
 export * from "./activity";
 export * from "./notification";
 export * from "./taskContent";
+export * from "./autoSortRule";

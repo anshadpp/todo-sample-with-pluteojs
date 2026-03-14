@@ -175,14 +175,16 @@ export default (route: Router): void => {
 
 			try {
 				const userId = req.user?.id;
-				if (!userId) {throw new Error("User ID not found in session");}
+				if (!userId) {
+					throw new Error("User ID not found in session");
+				}
 
 				const data = await todosService.createTodo(userId, req.body);
 				res.ok(data, 201);
 			} catch (error) {
 				next(error);
 			}
-		},
+		}
 	);
 
 	/**
@@ -198,14 +200,16 @@ export default (route: Router): void => {
 
 			try {
 				const userId = req.user?.id;
-				if (!userId) {throw new Error("User ID not found in session");}
+				if (!userId) {
+					throw new Error("User ID not found in session");
+				}
 
 				const data = await todosService.getTodos(userId);
 				res.ok(data);
 			} catch (error) {
 				next(error);
 			}
-		},
+		}
 	);
 
 	/**
@@ -221,14 +225,16 @@ export default (route: Router): void => {
 
 			try {
 				const userId = req.user?.id;
-				if (!userId) {throw new Error("User ID not found in session");}
+				if (!userId) {
+					throw new Error("User ID not found in session");
+				}
 
 				const data = await todosService.getTodo(userId, req.params.todoId!);
 				res.ok(data);
 			} catch (error) {
 				next(error);
 			}
-		},
+		}
 	);
 
 	/**
@@ -245,14 +251,20 @@ export default (route: Router): void => {
 
 			try {
 				const userId = req.user?.id;
-				if (!userId) {throw new Error("User ID not found in session");}
+				if (!userId) {
+					throw new Error("User ID not found in session");
+				}
 
-				const data = await todosService.updateTodo(userId, req.params.todoId!, req.body);
+				const data = await todosService.updateTodo(
+					userId,
+					req.params.todoId!,
+					req.body
+				);
 				res.ok(data);
 			} catch (error) {
 				next(error);
 			}
-		},
+		}
 	);
 
 	/**
@@ -268,13 +280,15 @@ export default (route: Router): void => {
 
 			try {
 				const userId = req.user?.id;
-				if (!userId) {throw new Error("User ID not found in session");}
+				if (!userId) {
+					throw new Error("User ID not found in session");
+				}
 
 				await todosService.deleteTodo(userId, req.params.todoId!);
 				res.ok({message: "Todo deleted successfully"});
 			} catch (error) {
 				next(error);
 			}
-		},
+		}
 	);
 };

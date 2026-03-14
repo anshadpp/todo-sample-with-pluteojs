@@ -12,11 +12,13 @@ export const activitySchema = z.object({
 	newValue: z.string().nullable(),
 	metadata: z.string().nullable(),
 	createdAt: z.string().datetime(),
-	user: z.object({
-		id: uuidv4Schema,
-		name: z.string(),
-		image: z.string().nullable(),
-	}).optional(),
+	user: z
+		.object({
+			id: uuidv4Schema,
+			name: z.string(),
+			image: z.string().nullable(),
+		})
+		.optional(),
 });
 
 export const activityListResponseSchema = z.array(activitySchema);

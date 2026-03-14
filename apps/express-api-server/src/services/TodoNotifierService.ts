@@ -35,19 +35,28 @@ export default class TodoNotifierService {
 		try {
 			const dueTodos = await this.todosService.getDueTodos();
 
-			if (dueTodos.length === 0) {return;}
+			if (dueTodos.length === 0) {
+				return;
+			}
 
 			logger.info(`Found ${dueTodos.length} todo(s) due for notification`);
 
 			for (const todo of dueTodos) {
 				logger.info(
-					`[TODO REMINDER] "${todo.title}" - Due: ${todo.dueAt ?? "no due date"} | User: ${todo.userId}`,
+					`[TODO REMINDER] "${todo.title}" - Due: ${todo.dueAt ?? "no due date"} | User: ${todo.userId}`
 				);
 			}
 
-			await this.todosService.markAsNotified(dueTodos.map((t) => {return t.id;}));
+			await this.todosService.markAsNotified(
+				dueTodos.map((t) => {
+					return t.id;
+				})
+			);
 		} catch (error) {
-			logger.error("TodoNotifierService: Error checking notifications", error as string);
+			logger.error(
+				"TodoNotifierService: Error checking notifications",
+				error as string
+			);
 		}
 	}
 }

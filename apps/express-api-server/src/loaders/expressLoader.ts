@@ -71,7 +71,12 @@ interface iValidationErrorDetails {
  * @param next
  * @returns
  */
-const zodValidationErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
+const zodValidationErrorHandler: ErrorRequestHandler = (
+	err,
+	req,
+	res,
+	next
+) => {
 	// Check if it's a Zod error
 	if (err && err.name === "ZodError") {
 		const zodError = err as ZodError;
@@ -141,7 +146,8 @@ const unAuthorizedErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
  */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const genericErrorHandler: ErrorRequestHandler = (err, req, res, _next) => {
-	const uniqueRequestId = (req as express.Request & {uniqueRequestId: string}).uniqueRequestId;
+	const uniqueRequestId = (req as express.Request & {uniqueRequestId: string})
+		.uniqueRequestId;
 
 	// Handle ServiceError thrown by service layer
 	if (err instanceof ServiceError) {
@@ -208,10 +214,12 @@ const loadExpress = ({app}: {app: express.Application}): void => {
 	app.use(helmet());
 
 	// Enable Cross Origin Resource Sharing with credentials support
-	app.use(cors({
-		origin: process.env.CORS_ORIGIN || "http://localhost:4020",
-		credentials: true,
-	}));
+	app.use(
+		cors({
+			origin: process.env.CORS_ORIGIN || "http://localhost:4020",
+			credentials: true,
+		})
+	);
 
 	// adds a unique id to each request
 	app.use(addRequestId);

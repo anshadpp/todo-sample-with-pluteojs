@@ -17,7 +17,7 @@ declare module "@pluteojs/better-auth" {
 	export function isEndpointAllowed(
 		path: string,
 		method: string,
-		customAllowlist?: Record<string, string[]>,
+		customAllowlist?: Record<string, string[]>
 	): boolean;
 	export const defaultAllowedEndpoints: Record<string, string[]>;
 	export type EnvConfig = any;
@@ -82,20 +82,20 @@ declare module "@pluteojs/better-auth" {
 		};
 		inviter: {
 			userId: string;
-			user: { name: string; email: string };
+			user: {name: string; email: string};
 		};
 		role: string;
-		invitation: { expiresAt: Date };
+		invitation: {expiresAt: Date};
 	}
 
 	export interface EmailVerificationData {
-		user: { id: string; email: string; name: string };
+		user: {id: string; email: string; name: string};
 		url: string;
 		token: string;
 	}
 
 	export interface PasswordResetEmailData {
-		user: { id: string; email: string; name: string };
+		user: {id: string; email: string; name: string};
 		url: string;
 		token: string;
 	}

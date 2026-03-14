@@ -5,6 +5,7 @@ import loadExpress from "@loaders/expressLoader";
 import loadBetterAuth from "@loaders/betterAuthLoader";
 import {loadOpenApi} from "@loaders/openApiLoader";
 import TodoNotifierService from "@services/TodoNotifierService";
+import AutoSortSchedulerService from "@services/AutoSortSchedulerService";
 
 const loader = async ({
 	expressApp,
@@ -24,6 +25,10 @@ const loader = async ({
 	// Start the todo notification service
 	const todoNotifier = new TodoNotifierService();
 	todoNotifier.start();
+
+	// Start the auto-sort scheduler service
+	const autoSortScheduler = new AutoSortSchedulerService();
+	autoSortScheduler.start();
 };
 
 export default loader;

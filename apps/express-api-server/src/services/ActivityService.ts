@@ -5,7 +5,10 @@ import logger from "@loaders/logger";
 import type {iActivity} from "@customTypes/appDataTypes/taskTypes";
 
 export default class ActivityService {
-	private toDTO(record: typeof taskActivities.$inferSelect, user?: {id: string; name: string; image: string | null}): iActivity {
+	private toDTO(
+		record: typeof taskActivities.$inferSelect,
+		user?: {id: string; name: string; image: string | null}
+	): iActivity {
 		return {
 			id: record.id,
 			taskId: record.taskId,
@@ -27,7 +30,7 @@ export default class ActivityService {
 		field?: string,
 		oldValue?: string,
 		newValue?: string,
-		metadata?: string,
+		metadata?: string
 	): Promise<void> {
 		await db.insert(taskActivities).values({
 			taskId,
@@ -59,6 +62,8 @@ export default class ActivityService {
 			.where(eq(taskActivities.taskId, taskId))
 			.orderBy(taskActivities.createdAt);
 
-		return records.map((r) => {return this.toDTO(r.activity, r.user);});
+		return records.map((r) => {
+			return this.toDTO(r.activity, r.user);
+		});
 	}
 }

@@ -41,18 +41,21 @@ export const tasksRelations = relations(tasks, ({one, many}) => ({
 	contents: many(taskContents),
 }));
 
-export const taskDependenciesRelations = relations(taskDependencies, ({one}) => ({
-	dependentTask: one(tasks, {
-		fields: [taskDependencies.dependentTaskId],
-		references: [tasks.id],
-		relationName: "dependentTask",
-	}),
-	dependsOnTask: one(tasks, {
-		fields: [taskDependencies.dependsOnTaskId],
-		references: [tasks.id],
-		relationName: "dependsOnTask",
-	}),
-}));
+export const taskDependenciesRelations = relations(
+	taskDependencies,
+	({one}) => ({
+		dependentTask: one(tasks, {
+			fields: [taskDependencies.dependentTaskId],
+			references: [tasks.id],
+			relationName: "dependentTask",
+		}),
+		dependsOnTask: one(tasks, {
+			fields: [taskDependencies.dependsOnTaskId],
+			references: [tasks.id],
+			relationName: "dependsOnTask",
+		}),
+	})
+);
 
 export const taskCommentsRelations = relations(taskComments, ({one}) => ({
 	task: one(tasks, {

@@ -1,10 +1,4 @@
-import {
-	pgTable,
-	text,
-	timestamp,
-	uuid,
-	index,
-} from "drizzle-orm/pg-core";
+import {pgTable, text, timestamp, uuid, index} from "drizzle-orm/pg-core";
 
 import {users} from "../betterAuth/betterAuth.schema";
 import {tasks} from "./tasks.schema";
@@ -24,13 +18,15 @@ export const taskActivities = pgTable(
 		oldValue: text("old_value"),
 		newValue: text("new_value"),
 		metadata: text("metadata"),
-		createdAt: timestamp("created_at", {withTimezone: true}).defaultNow().notNull(),
+		createdAt: timestamp("created_at", {withTimezone: true})
+			.defaultNow()
+			.notNull(),
 	},
 	(table) => [
 		index("taskActivities_taskId_idx").on(table.taskId),
 		index("taskActivities_userId_idx").on(table.userId),
 		index("taskActivities_createdAt_idx").on(table.createdAt),
-	],
+	]
 );
 
 export type TaskActivity = typeof taskActivities.$inferSelect;

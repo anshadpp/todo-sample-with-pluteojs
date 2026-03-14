@@ -3,13 +3,20 @@ import {db, eq, and, desc, taskComments, users} from "@pluteojs/database";
 import logger from "@loaders/logger";
 
 import {httpStatusCodes} from "@customTypes/networkTypes";
-import type {iComment, iCreateCommentDTO, iUpdateCommentDTO} from "@customTypes/appDataTypes/taskTypes";
+import type {
+	iComment,
+	iCreateCommentDTO,
+	iUpdateCommentDTO,
+} from "@customTypes/appDataTypes/taskTypes";
 
 import {ServiceError} from "@errors/ServiceError";
 import {taskServiceError} from "@constants/errors/taskServiceErrors";
 
 export default class CommentsService {
-	private toDTO(record: typeof taskComments.$inferSelect, user?: {id: string; name: string; image: string | null}): iComment {
+	private toDTO(
+		record: typeof taskComments.$inferSelect,
+		user?: {id: string; name: string; image: string | null}
+	): iComment {
 		return {
 			id: record.id,
 			taskId: record.taskId,
@@ -40,10 +47,16 @@ export default class CommentsService {
 			.where(eq(taskComments.taskId, taskId))
 			.orderBy(taskComments.createdAt);
 
-		return records.map((r) => {return this.toDTO(r.comment, r.user);});
+		return records.map((r) => {
+			return this.toDTO(r.comment, r.user);
+		});
 	}
 
-	public async createComment(userId: string, taskId: string, input: iCreateCommentDTO): Promise<iComment> {
+	public async createComment(
+		userId: string,
+		taskId: string,
+		input: iCreateCommentDTO
+	): Promise<iComment> {
 		logger.silly("Creating a new comment");
 
 		const result = await db
@@ -69,7 +82,11 @@ export default class CommentsService {
 		return this.toDTO(comment, userRecords[0]);
 	}
 
-	public async updateComment(userId: string, commentId: string, input: iUpdateCommentDTO): Promise<iComment> {
+	public async updateComment(
+		userId: string,
+		commentId: string,
+		input: iUpdateCommentDTO
+	): Promise<iComment> {
 		logger.silly("Updating comment");
 
 		// Verify ownership
@@ -82,14 +99,14 @@ export default class CommentsService {
 		if (!existing[0]) {
 			throw new ServiceError(
 				httpStatusCodes.CLIENT_ERROR_NOT_FOUND,
-				taskServiceError.updateComment.CommentNotFound,
+				taskServiceError.updateComment.CommentNotFound
 			);
 		}
 
 		if (existing[0].userId !== userId) {
 			throw new ServiceError(
 				httpStatusCodes.CLIENT_ERROR_FORBIDDEN,
-				taskServiceError.updateComment.NotCommentOwner,
+				taskServiceError.updateComment.NotCommentOwner
 			);
 		}
 
@@ -123,14 +140,14 @@ export default class CommentsService {
 		if (!existing[0]) {
 			throw new ServiceError(
 				httpStatusCodes.CLIENT_ERROR_NOT_FOUND,
-				taskServiceError.deleteComment.CommentNotFound,
+				taskServiceError.deleteComment.CommentNotFound
 			);
 		}
 
 		if (existing[0].userId !== userId) {
 			throw new ServiceError(
 				httpStatusCodes.CLIENT_ERROR_FORBIDDEN,
-				taskServiceError.deleteComment.NotCommentOwner,
+				taskServiceError.deleteComment.NotCommentOwner
 			);
 		}
 

@@ -44,8 +44,14 @@ export default (route: Router): void => {
 		/**
 		 * Helper: Send success response (respects envelope setting)
 		 */
-		const sendSuccess = (statusCode: number, data: unknown, authResponse?: globalThis.Response): Response<unknown> => {
-			if (authResponse) {copyHeaders(authResponse);}
+		const sendSuccess = (
+			statusCode: number,
+			data: unknown,
+			authResponse?: globalThis.Response
+		): Response<unknown> => {
+			if (authResponse) {
+				copyHeaders(authResponse);
+			}
 
 			if (enableEnvelope) {
 				return res.ok(data, statusCode as httpStatusCodes);
@@ -61,7 +67,9 @@ export default (route: Router): void => {
 			error: {code?: string; message?: string},
 			authResponse?: globalThis.Response
 		): Response<unknown> => {
-			if (authResponse) {copyHeaders(authResponse);}
+			if (authResponse) {
+				copyHeaders(authResponse);
+			}
 
 			if (enableEnvelope) {
 				const responseError: iResponseError = betterAuthUtil.buildErrorResponse(
@@ -76,15 +84,21 @@ export default (route: Router): void => {
 
 		// Step 1: Check endpoint allowlist
 		const authPath = req.path; // e.g., "/auth/sign-in/email"
-		const allowedEndpoints = Object.keys(config.betterAuth.allowedEndpoints).length > 0
-			? config.betterAuth.allowedEndpoints
-			: undefined; // Use defaults if empty
+		const allowedEndpoints =
+			Object.keys(config.betterAuth.allowedEndpoints).length > 0
+				? config.betterAuth.allowedEndpoints
+				: undefined; // Use defaults if empty
 
 		if (!isEndpointAllowed(authPath, req.method, allowedEndpoints)) {
-			logger.warning(uniqueRequestId, "Blocked request to non-allowed endpoint", null, {
-				path: authPath,
-				method: req.method,
-			});
+			logger.warning(
+				uniqueRequestId,
+				"Blocked request to non-allowed endpoint",
+				null,
+				{
+					path: authPath,
+					method: req.method,
+				}
+			);
 			return sendError(httpStatusCodes.CLIENT_ERROR_NOT_FOUND, {
 				code: "ENDPOINT_NOT_FOUND",
 				message: "Endpoint not found",
@@ -140,7 +154,10 @@ export default (route: Router): void => {
 			if (authPath.endsWith(betterAuthConstants.OPEN_API_ENDPOINT)) {
 				copyHeaders(authResponse);
 				const htmlBody = await authResponse.text();
-				res.setHeader("Content-Type", authResponse.headers.get("content-type") || "text/html");
+				res.setHeader(
+					"Content-Type",
+					authResponse.headers.get("content-type") || "text/html"
+				);
 				// Override CSP to allow Scalar scripts from CDN
 				res.setHeader(
 					"Content-Security-Policy",

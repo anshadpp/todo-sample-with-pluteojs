@@ -148,7 +148,8 @@ export function PaymentReceiptEmail({
 				</Section>
 
 				<Text style={footerNoteStyle}>
-					This receipt serves as confirmation of your payment. Please keep it for your records.
+					This receipt serves as confirmation of your payment. Please keep it
+					for your records.
 				</Text>
 			</Section>
 		</Layout>

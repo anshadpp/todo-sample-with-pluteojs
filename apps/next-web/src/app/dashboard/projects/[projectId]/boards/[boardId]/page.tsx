@@ -48,6 +48,7 @@ import {
 	boardService,
 	taskService,
 	commentService,
+	autoSortRuleService,
 } from "@/services/api/PluteoJS";
 
 // ---------------------------------------------------------------------------
@@ -151,6 +152,23 @@ interface Board {
 	categories?: Category[];
 }
 
+interface AutoSortRule {
+	id: string;
+	projectId: string;
+	name: string;
+	description: string | null;
+	conditionField: string;
+	conditionOperator: string;
+	conditionValue: string | null;
+	actionType: string;
+	actionValue: string;
+	isEnabled: boolean;
+	sortOrder: number;
+	stopOnMatch: boolean;
+	createdAt: string;
+	updatedAt: string;
+}
+
 // ---------------------------------------------------------------------------
 // Priority colour map
 // ---------------------------------------------------------------------------
@@ -208,6 +226,25 @@ async function apiFetch<T>(
 }
 
 // ---------------------------------------------------------------------------
+// Helper: resolve which category a task belongs to
+// ---------------------------------------------------------------------------
+
+function resolveTaskCategory(
+	task: Task,
+	boardType: "status" | "category",
+	categories: Category[]
+): string {
+	if (boardType === "status") {
+		const hasStatusValues = categories.some((c) => c.statusValue);
+		if (hasStatusValues) {
+			const matchingCat = categories.find((c) => c.statusValue === task.status);
+			return matchingCat ? matchingCat.id : "uncategorized";
+		}
+	}
+	return task.categoryId || "uncategorized";
+}
+
+// ---------------------------------------------------------------------------
 // Main BoardPage
 // ---------------------------------------------------------------------------
 
@@ -238,6 +275,7 @@ export default function BoardPage() {
 		string | null
 	>(null);
 	const [showCreateBoardModal, setShowCreateBoardModal] = useState(false);
+	const [showAutoSortModal, setShowAutoSortModal] = useState(false);
 	const [viewMode, setViewMode] = useState<
 		"board" | "list" | "calendar" | "timeline"
 	>("board");
@@ -284,7 +322,12 @@ export default function BoardPage() {
 					const allTasks = tasksResult.data as unknown as Task[];
 					const grouped: Record<string, Task[]> = {};
 
-					if (currentBoardType === "status") {
+					// Check if any category has statusValue set
+					const hasStatusValues =
+						currentBoardType === "status" &&
+						cats.some((c: Category) => c.statusValue);
+
+					if (hasStatusValues) {
 						// Group tasks by matching task.status to category statusValue
 						for (const task of allTasks) {
 							const matchingCat = cats.find(
@@ -295,7 +338,7 @@ export default function BoardPage() {
 							grouped[catId]!.push(task);
 						}
 					} else {
-						// Category board: group by categoryId
+						// Category board or status board without statusValues: group by categoryId
 						for (const task of allTasks) {
 							const catId = task.categoryId || "uncategorized";
 							if (!grouped[catId]) grouped[catId] = [];
@@ -349,16 +392,7 @@ export default function BoardPage() {
 
 		socket.on("task:created", (task: Task) => {
 			setTasksByCategory((prev) => {
-				// Determine the right column for this task
-				let catId: string;
-				if (boardType === "status") {
-					const matchingCat = categories.find(
-						(c) => c.statusValue === task.status
-					);
-					catId = matchingCat ? matchingCat.id : "uncategorized";
-				} else {
-					catId = task.categoryId || "uncategorized";
-				}
+				const catId = resolveTaskCategory(task, boardType, categories);
 				return {
 					...prev,
 					[catId]: [...(prev[catId] || []), task],
@@ -369,20 +403,10 @@ export default function BoardPage() {
 		socket.on("task:updated", (task: Task) => {
 			setTasksByCategory((prev) => {
 				const next: Record<string, Task[]> = {};
-				// Remove task from all columns first
 				for (const catId of Object.keys(prev)) {
 					next[catId] = prev[catId]!.filter((t) => t.id !== task.id);
 				}
-				// Place task in correct column
-				let targetCatId: string;
-				if (boardType === "status") {
-					const matchingCat = categories.find(
-						(c) => c.statusValue === task.status
-					);
-					targetCatId = matchingCat ? matchingCat.id : "uncategorized";
-				} else {
-					targetCatId = task.categoryId || "uncategorized";
-				}
+				const targetCatId = resolveTaskCategory(task, boardType, categories);
 				next[targetCatId] = [...(next[targetCatId] || []), task];
 				return next;
 			});
@@ -394,15 +418,7 @@ export default function BoardPage() {
 				for (const catId of Object.keys(prev)) {
 					next[catId] = prev[catId]!.filter((t) => t.id !== task.id);
 				}
-				let newCatId: string;
-				if (boardType === "status") {
-					const matchingCat = categories.find(
-						(c) => c.statusValue === task.status
-					);
-					newCatId = matchingCat ? matchingCat.id : "uncategorized";
-				} else {
-					newCatId = task.categoryId || "uncategorized";
-				}
+				const newCatId = resolveTaskCategory(task, boardType, categories);
 				next[newCatId] = [...(next[newCatId] || []), task];
 				return next;
 			});
@@ -525,9 +541,10 @@ export default function BoardPage() {
 				const targetCategory = categories.find((c) => c.id === overCategoryId);
 				const movedTask: Task = {
 					...draggedTask,
+					categoryId: overCategoryId,
 					...(boardType === "status" && targetCategory?.statusValue
 						? {status: targetCategory.statusValue}
-						: {categoryId: overCategoryId}),
+						: {}),
 				};
 
 				const overIndex = destTasks.findIndex((t) => t.id === overId);
@@ -593,17 +610,16 @@ export default function BoardPage() {
 				reorderItems.find((r) => r.id === activeId)?.sortOrder ?? 0;
 
 			if (categoryId !== "uncategorized") {
-				if (boardType === "status") {
-					// Status board: update task.status to match the target column's statusValue
-					const targetCategory = categories.find((c) => c.id === categoryId);
-					if (targetCategory?.statusValue) {
-						await taskService.updateTask(activeId, {
-							status: targetCategory.statusValue,
-							sortOrder,
-						});
-					}
+				const targetCategory = categories.find((c) => c.id === categoryId);
+				if (boardType === "status" && targetCategory?.statusValue) {
+					// Status board with statusValue: update status and categoryId
+					await taskService.updateTask(activeId, {
+						status: targetCategory.statusValue,
+						categoryId,
+						sortOrder,
+					});
 				} else {
-					// Category board: move task to the category
+					// Category board or status board without statusValue: move by categoryId
 					await taskService.moveTask(activeId, {
 						categoryId,
 						sortOrder,
@@ -973,6 +989,28 @@ export default function BoardPage() {
 						</Button>
 					)}
 				</div>
+
+				{/* Auto-Sort Rules button */}
+				<Button
+					variant="outline"
+					size="sm"
+					className="text-xs gap-1.5 shrink-0"
+					onClick={() => setShowAutoSortModal(true)}
+				>
+					<svg
+						width="14"
+						height="14"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+					>
+						<path d="M3 6h18M6 12h12M9 18h6" />
+					</svg>
+					Auto-Sort
+				</Button>
 			</div>
 
 			{/* View content */}
@@ -1086,6 +1124,15 @@ export default function BoardPage() {
 				<CreateBoardModal
 					onClose={() => setShowCreateBoardModal(false)}
 					onCreated={handleCreateBoard}
+				/>
+			)}
+
+			{/* Auto-Sort Rules Modal */}
+			{showAutoSortModal && (
+				<AutoSortRulesModal
+					projectId={projectId}
+					categories={categories}
+					onClose={() => setShowAutoSortModal(false)}
 				/>
 			)}
 		</div>
@@ -4095,6 +4142,692 @@ function TimelineView({
 					<div className="w-3 h-3 rotate-45 bg-muted-foreground/30 border border-muted-foreground/50" />{" "}
 					No dates
 				</div>
+			</div>
+		</div>
+	);
+}
+
+// ===========================================================================
+// AutoSortRulesModal
+// ===========================================================================
+
+const CONDITION_FIELDS = [
+	{value: "dueAt", label: "Due Date"},
+	{value: "status", label: "Status"},
+	{value: "priority", label: "Priority"},
+	{value: "completedAt", label: "Completed At"},
+	{value: "isArchived", label: "Is Archived"},
+	{value: "assigneeId", label: "Assignee"},
+	{value: "effortLevel", label: "Effort Level"},
+];
+
+const CONDITION_OPERATORS = [
+	{value: "eq", label: "equals"},
+	{value: "neq", label: "not equals"},
+	{value: "lt_now", label: "is before now"},
+	{value: "gt_now", label: "is after now"},
+	{value: "is_null", label: "is empty"},
+	{value: "is_not_null", label: "is not empty"},
+];
+
+const ACTION_TYPES = [
+	{value: "move_to_category", label: "Move to Category"},
+	{value: "set_status", label: "Set Status"},
+	{value: "set_priority", label: "Set Priority"},
+	{value: "archive", label: "Archive"},
+];
+
+const PRIORITY_OPTIONS = [
+	{value: "urgent", label: "Urgent"},
+	{value: "high", label: "High"},
+	{value: "medium", label: "Medium"},
+	{value: "low", label: "Low"},
+	{value: "none", label: "None"},
+];
+
+const STATUS_OPTIONS = [
+	{value: "todo", label: "Todo"},
+	{value: "open", label: "Open"},
+	{value: "in_progress", label: "In Progress"},
+	{value: "review", label: "Review"},
+	{value: "done", label: "Done"},
+	{value: "closed", label: "Closed"},
+];
+
+function AutoSortRulesModal({
+	projectId,
+	categories,
+	onClose,
+}: {
+	projectId: string;
+	categories: Category[];
+	onClose: () => void;
+}) {
+	const [rules, setRules] = useState<AutoSortRule[]>([]);
+	const [loading, setLoading] = useState(true);
+	const [showCreateForm, setShowCreateForm] = useState(false);
+	const [editingRule, setEditingRule] = useState<AutoSortRule | null>(null);
+	const [evaluating, setEvaluating] = useState(false);
+	const [evaluateResult, setEvaluateResult] = useState<string | null>(null);
+
+	// Form state
+	const [formName, setFormName] = useState("");
+	const [formDescription, setFormDescription] = useState("");
+	const [formConditionField, setFormConditionField] = useState("dueAt");
+	const [formConditionOperator, setFormConditionOperator] = useState("lt_now");
+	const [formConditionValue, setFormConditionValue] = useState("");
+	const [formActionType, setFormActionType] = useState("move_to_category");
+	const [formActionValue, setFormActionValue] = useState("");
+	const [formEnabled, setFormEnabled] = useState(true);
+	const [formStopOnMatch, setFormStopOnMatch] = useState(true);
+	const [submitting, setSubmitting] = useState(false);
+	const [error, setError] = useState("");
+
+	const needsConditionValue =
+		formConditionOperator === "eq" || formConditionOperator === "neq";
+	const needsActionValue = formActionType !== "archive";
+
+	// Load rules
+	useEffect(() => {
+		const loadRules = async () => {
+			setLoading(true);
+			const result = await autoSortRuleService.getRules(projectId);
+			if (!result.error && result.data) {
+				setRules(result.data as unknown as AutoSortRule[]);
+			}
+			setLoading(false);
+		};
+		loadRules();
+	}, [projectId]);
+
+	const resetForm = () => {
+		setFormName("");
+		setFormDescription("");
+		setFormConditionField("dueAt");
+		setFormConditionOperator("lt_now");
+		setFormConditionValue("");
+		setFormActionType("move_to_category");
+		setFormActionValue("");
+		setFormEnabled(true);
+		setFormStopOnMatch(true);
+		setError("");
+	};
+
+	const openEditForm = (rule: AutoSortRule) => {
+		setEditingRule(rule);
+		setFormName(rule.name);
+		setFormDescription(rule.description || "");
+		setFormConditionField(rule.conditionField);
+		setFormConditionOperator(rule.conditionOperator);
+		setFormConditionValue(rule.conditionValue || "");
+		setFormActionType(rule.actionType);
+		setFormActionValue(rule.actionValue);
+		setFormEnabled(rule.isEnabled);
+		setFormStopOnMatch(rule.stopOnMatch);
+		setShowCreateForm(true);
+		setError("");
+	};
+
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		if (!formName.trim()) return;
+		if (needsActionValue && !formActionValue) return;
+
+		setSubmitting(true);
+		setError("");
+
+		const payload: Record<string, unknown> = {
+			name: formName.trim(),
+			description: formDescription.trim() || undefined,
+			conditionField: formConditionField,
+			conditionOperator: formConditionOperator,
+			conditionValue: needsConditionValue ? formConditionValue : undefined,
+			actionType: formActionType,
+			actionValue: formActionType === "archive" ? "true" : formActionValue,
+			isEnabled: formEnabled,
+			stopOnMatch: formStopOnMatch,
+		};
+
+		if (editingRule) {
+			const result = await autoSortRuleService.updateRule(
+				editingRule.id,
+				payload
+			);
+			if (!result.error && result.data) {
+				const updated = result.data as unknown as AutoSortRule;
+				setRules((prev) =>
+					prev.map((r) => (r.id === updated.id ? updated : r))
+				);
+				setShowCreateForm(false);
+				setEditingRule(null);
+				resetForm();
+			} else {
+				setError(String(result.message || result.error || "Failed to update"));
+			}
+		} else {
+			const result = await autoSortRuleService.createRule(projectId, payload);
+			if (!result.error && result.data) {
+				setRules((prev) => [...prev, result.data as unknown as AutoSortRule]);
+				setShowCreateForm(false);
+				resetForm();
+			} else {
+				setError(String(result.message || result.error || "Failed to create"));
+			}
+		}
+
+		setSubmitting(false);
+	};
+
+	const handleDelete = async (ruleId: string) => {
+		const result = await autoSortRuleService.deleteRule(ruleId);
+		if (!result.error) {
+			setRules((prev) => prev.filter((r) => r.id !== ruleId));
+		}
+	};
+
+	const handleToggleEnabled = async (rule: AutoSortRule) => {
+		const result = await autoSortRuleService.updateRule(rule.id, {
+			isEnabled: !rule.isEnabled,
+		});
+		if (!result.error && result.data) {
+			const updated = result.data as unknown as AutoSortRule;
+			setRules((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+		}
+	};
+
+	const handleEvaluateNow = async () => {
+		setEvaluating(true);
+		setEvaluateResult(null);
+		const result = await autoSortRuleService.evaluateRules(projectId);
+		if (!result.error && result.data) {
+			const data = result.data as unknown as {actionsApplied: number};
+			setEvaluateResult(
+				data.actionsApplied > 0
+					? `${data.actionsApplied} task(s) auto-sorted. Refresh to see changes.`
+					: "No tasks matched any rules."
+			);
+		} else {
+			setEvaluateResult("Failed to run evaluation.");
+		}
+		setEvaluating(false);
+	};
+
+	const getActionValueLabel = (rule: AutoSortRule): string => {
+		if (rule.actionType === "move_to_category") {
+			const cat = categories.find((c) => c.id === rule.actionValue);
+			return cat ? cat.name : rule.actionValue;
+		}
+		if (rule.actionType === "set_priority") {
+			return (
+				PRIORITY_OPTIONS.find((p) => p.value === rule.actionValue)?.label ||
+				rule.actionValue
+			);
+		}
+		if (rule.actionType === "set_status") {
+			return (
+				STATUS_OPTIONS.find((s) => s.value === rule.actionValue)?.label ||
+				rule.actionValue
+			);
+		}
+		if (rule.actionType === "archive") return "Yes";
+		return rule.actionValue;
+	};
+
+	const getConditionLabel = (rule: AutoSortRule): string => {
+		const field =
+			CONDITION_FIELDS.find((f) => f.value === rule.conditionField)?.label ||
+			rule.conditionField;
+		const op =
+			CONDITION_OPERATORS.find((o) => o.value === rule.conditionOperator)
+				?.label || rule.conditionOperator;
+		if (rule.conditionValue) {
+			return `${field} ${op} "${rule.conditionValue}"`;
+		}
+		return `${field} ${op}`;
+	};
+
+	const renderActionValueInput = () => {
+		if (formActionType === "archive") return null;
+
+		if (formActionType === "move_to_category") {
+			return (
+				<div>
+					<label className="block text-sm font-medium mb-1.5">
+						Target Category
+					</label>
+					<select
+						value={formActionValue}
+						onChange={(e) => setFormActionValue(e.target.value)}
+						className="w-full px-3 py-2 text-sm border border-input rounded-md bg-background"
+					>
+						<option value="">Select category...</option>
+						{categories.map((c) => (
+							<option key={c.id} value={c.id}>
+								{c.name}
+								{c.statusValue ? ` (${c.statusValue})` : ""}
+							</option>
+						))}
+					</select>
+				</div>
+			);
+		}
+
+		if (formActionType === "set_priority") {
+			return (
+				<div>
+					<label className="block text-sm font-medium mb-1.5">
+						Target Priority
+					</label>
+					<select
+						value={formActionValue}
+						onChange={(e) => setFormActionValue(e.target.value)}
+						className="w-full px-3 py-2 text-sm border border-input rounded-md bg-background"
+					>
+						<option value="">Select priority...</option>
+						{PRIORITY_OPTIONS.map((p) => (
+							<option key={p.value} value={p.value}>
+								{p.label}
+							</option>
+						))}
+					</select>
+				</div>
+			);
+		}
+
+		if (formActionType === "set_status") {
+			return (
+				<div>
+					<label className="block text-sm font-medium mb-1.5">
+						Target Status
+					</label>
+					<select
+						value={formActionValue}
+						onChange={(e) => setFormActionValue(e.target.value)}
+						className="w-full px-3 py-2 text-sm border border-input rounded-md bg-background"
+					>
+						<option value="">Select status...</option>
+						{STATUS_OPTIONS.map((s) => (
+							<option key={s.value} value={s.value}>
+								{s.label}
+							</option>
+						))}
+					</select>
+				</div>
+			);
+		}
+
+		return null;
+	};
+
+	return (
+		<div
+			className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+			onClick={onClose}
+		>
+			<div
+				className="bg-background border border-border rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[80vh] flex flex-col"
+				onClick={(e) => e.stopPropagation()}
+			>
+				{/* Header */}
+				<div className="px-6 py-4 border-b border-border flex items-center justify-between shrink-0">
+					<div>
+						<h2 className="text-lg font-semibold">Auto-Sort Rules</h2>
+						<p className="text-sm text-muted-foreground mt-0.5">
+							Automatically move or update tasks based on conditions.
+						</p>
+					</div>
+					<button
+						onClick={onClose}
+						className="text-muted-foreground hover:text-foreground p-1"
+					>
+						<svg
+							width="18"
+							height="18"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+						>
+							<path d="M18 6L6 18M6 6l12 12" />
+						</svg>
+					</button>
+				</div>
+
+				{/* Content */}
+				<div className="flex-1 overflow-y-auto px-6 py-4">
+					{loading ? (
+						<div className="space-y-3">
+							<Skeleton className="h-16 w-full" />
+							<Skeleton className="h-16 w-full" />
+						</div>
+					) : showCreateForm ? (
+						<form onSubmit={handleSubmit} className="space-y-4">
+							<div>
+								<label className="block text-sm font-medium mb-1.5">
+									Rule Name
+								</label>
+								<input
+									autoFocus
+									value={formName}
+									onChange={(e) => setFormName(e.target.value)}
+									placeholder="e.g. Move overdue to Urgent"
+									className="w-full px-3 py-2 text-sm border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+								/>
+							</div>
+
+							<div>
+								<label className="block text-sm font-medium mb-1.5">
+									Description (optional)
+								</label>
+								<input
+									value={formDescription}
+									onChange={(e) => setFormDescription(e.target.value)}
+									placeholder="What this rule does..."
+									className="w-full px-3 py-2 text-sm border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+								/>
+							</div>
+
+							{/* Condition section */}
+							<div className="border border-border rounded-md p-3 space-y-3">
+								<p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+									If condition
+								</p>
+								<div className="grid grid-cols-2 gap-3">
+									<div>
+										<label className="block text-xs font-medium mb-1">
+											Field
+										</label>
+										<select
+											value={formConditionField}
+											onChange={(e) => setFormConditionField(e.target.value)}
+											className="w-full px-2 py-1.5 text-sm border border-input rounded-md bg-background"
+										>
+											{CONDITION_FIELDS.map((f) => (
+												<option key={f.value} value={f.value}>
+													{f.label}
+												</option>
+											))}
+										</select>
+									</div>
+									<div>
+										<label className="block text-xs font-medium mb-1">
+											Operator
+										</label>
+										<select
+											value={formConditionOperator}
+											onChange={(e) => setFormConditionOperator(e.target.value)}
+											className="w-full px-2 py-1.5 text-sm border border-input rounded-md bg-background"
+										>
+											{CONDITION_OPERATORS.map((o) => (
+												<option key={o.value} value={o.value}>
+													{o.label}
+												</option>
+											))}
+										</select>
+									</div>
+								</div>
+								{needsConditionValue && (
+									<div>
+										<label className="block text-xs font-medium mb-1">
+											Value
+										</label>
+										<input
+											value={formConditionValue}
+											onChange={(e) => setFormConditionValue(e.target.value)}
+											placeholder="e.g. done, urgent, true"
+											className="w-full px-2 py-1.5 text-sm border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+										/>
+									</div>
+								)}
+							</div>
+
+							{/* Action section */}
+							<div className="border border-border rounded-md p-3 space-y-3">
+								<p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+									Then action
+								</p>
+								<div>
+									<label className="block text-xs font-medium mb-1">
+										Action Type
+									</label>
+									<select
+										value={formActionType}
+										onChange={(e) => {
+											setFormActionType(e.target.value);
+											setFormActionValue("");
+										}}
+										className="w-full px-2 py-1.5 text-sm border border-input rounded-md bg-background"
+									>
+										{ACTION_TYPES.map((a) => (
+											<option key={a.value} value={a.value}>
+												{a.label}
+											</option>
+										))}
+									</select>
+								</div>
+								{renderActionValueInput()}
+							</div>
+
+							{/* Options */}
+							<div className="flex items-center gap-4">
+								<label className="flex items-center gap-2 text-sm">
+									<input
+										type="checkbox"
+										checked={formEnabled}
+										onChange={(e) => setFormEnabled(e.target.checked)}
+										className="rounded"
+									/>
+									Enabled
+								</label>
+								<label className="flex items-center gap-2 text-sm">
+									<input
+										type="checkbox"
+										checked={formStopOnMatch}
+										onChange={(e) => setFormStopOnMatch(e.target.checked)}
+										className="rounded"
+									/>
+									Stop on match
+								</label>
+							</div>
+
+							{error && <p className="text-sm text-destructive">{error}</p>}
+
+							<div className="flex justify-end gap-2">
+								<Button
+									type="button"
+									variant="ghost"
+									size="sm"
+									onClick={() => {
+										setShowCreateForm(false);
+										setEditingRule(null);
+										resetForm();
+									}}
+								>
+									Cancel
+								</Button>
+								<Button
+									type="submit"
+									size="sm"
+									disabled={
+										!formName.trim() ||
+										(needsActionValue && !formActionValue) ||
+										submitting
+									}
+								>
+									{submitting
+										? "Saving..."
+										: editingRule
+											? "Update Rule"
+											: "Create Rule"}
+								</Button>
+							</div>
+						</form>
+					) : rules.length === 0 ? (
+						<div className="text-center py-8">
+							<svg
+								className="mx-auto text-muted-foreground/40 mb-3"
+								width="40"
+								height="40"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="1.5"
+							>
+								<path d="M3 6h18M6 12h12M9 18h6" />
+							</svg>
+							<p className="text-sm text-muted-foreground mb-1">
+								No auto-sort rules yet
+							</p>
+							<p className="text-xs text-muted-foreground mb-4">
+								Create rules to automatically move or update tasks based on
+								conditions like deadline, status, or priority.
+							</p>
+							<Button size="sm" onClick={() => setShowCreateForm(true)}>
+								Create First Rule
+							</Button>
+						</div>
+					) : (
+						<div className="space-y-2">
+							{rules.map((rule) => (
+								<div
+									key={rule.id}
+									className={`border border-border rounded-md p-3 ${
+										rule.isEnabled ? "bg-background" : "bg-muted/50 opacity-60"
+									}`}
+								>
+									<div className="flex items-start justify-between gap-2">
+										<div className="flex-1 min-w-0">
+											<div className="flex items-center gap-2">
+												<span className="text-sm font-medium truncate">
+													{rule.name}
+												</span>
+												{!rule.isEnabled && (
+													<Badge
+														variant="secondary"
+														className="text-[10px] px-1.5 py-0"
+													>
+														Disabled
+													</Badge>
+												)}
+											</div>
+											<p className="text-xs text-muted-foreground mt-1">
+												If{" "}
+												<span className="font-medium text-foreground/80">
+													{getConditionLabel(rule)}
+												</span>{" "}
+												then{" "}
+												<span className="font-medium text-foreground/80">
+													{ACTION_TYPES.find((a) => a.value === rule.actionType)
+														?.label || rule.actionType}{" "}
+													&rarr; {getActionValueLabel(rule)}
+												</span>
+											</p>
+										</div>
+										<div className="flex items-center gap-1 shrink-0">
+											<button
+												onClick={() => handleToggleEnabled(rule)}
+												className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+												title={rule.isEnabled ? "Disable rule" : "Enable rule"}
+											>
+												{rule.isEnabled ? (
+													<svg
+														width="14"
+														height="14"
+														viewBox="0 0 24 24"
+														fill="none"
+														stroke="currentColor"
+														strokeWidth="2"
+													>
+														<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+														<circle cx="12" cy="12" r="3" />
+													</svg>
+												) : (
+													<svg
+														width="14"
+														height="14"
+														viewBox="0 0 24 24"
+														fill="none"
+														stroke="currentColor"
+														strokeWidth="2"
+													>
+														<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+														<line x1="1" y1="1" x2="23" y2="23" />
+													</svg>
+												)}
+											</button>
+											<button
+												onClick={() => openEditForm(rule)}
+												className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+												title="Edit rule"
+											>
+												<svg
+													width="14"
+													height="14"
+													viewBox="0 0 24 24"
+													fill="none"
+													stroke="currentColor"
+													strokeWidth="2"
+												>
+													<path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+													<path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+												</svg>
+											</button>
+											<button
+												onClick={() => handleDelete(rule.id)}
+												className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+												title="Delete rule"
+											>
+												<svg
+													width="14"
+													height="14"
+													viewBox="0 0 24 24"
+													fill="none"
+													stroke="currentColor"
+													strokeWidth="2"
+												>
+													<polyline points="3 6 5 6 21 6" />
+													<path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+												</svg>
+											</button>
+										</div>
+									</div>
+								</div>
+							))}
+						</div>
+					)}
+				</div>
+
+				{/* Footer */}
+				{!loading && !showCreateForm && (
+					<div className="px-6 py-3 border-t border-border flex items-center justify-between shrink-0">
+						<div className="flex items-center gap-2">
+							<Button
+								variant="outline"
+								size="sm"
+								className="text-xs"
+								onClick={handleEvaluateNow}
+								disabled={evaluating || rules.length === 0}
+							>
+								{evaluating ? "Running..." : "Run Now"}
+							</Button>
+							{evaluateResult && (
+								<span className="text-xs text-muted-foreground">
+									{evaluateResult}
+								</span>
+							)}
+						</div>
+						<Button
+							size="sm"
+							className="text-xs"
+							onClick={() => {
+								resetForm();
+								setShowCreateForm(true);
+							}}
+						>
+							+ New Rule
+						</Button>
+					</div>
+				)}
 			</div>
 		</div>
 	);

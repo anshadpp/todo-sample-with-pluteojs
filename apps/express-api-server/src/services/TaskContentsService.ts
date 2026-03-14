@@ -3,7 +3,11 @@ import {db, eq, and, asc, taskContents, users} from "@pluteojs/database";
 import logger from "@loaders/logger";
 
 import {httpStatusCodes} from "@customTypes/networkTypes";
-import type {iTaskContent, iCreateTaskContentDTO, iUpdateTaskContentDTO} from "@customTypes/appDataTypes/taskTypes";
+import type {
+	iTaskContent,
+	iCreateTaskContentDTO,
+	iUpdateTaskContentDTO,
+} from "@customTypes/appDataTypes/taskTypes";
 
 import {ServiceError} from "@errors/ServiceError";
 import {taskServiceError} from "@constants/errors/taskServiceErrors";
@@ -11,7 +15,7 @@ import {taskServiceError} from "@constants/errors/taskServiceErrors";
 export default class TaskContentsService {
 	private toDTO(
 		record: typeof taskContents.$inferSelect,
-		user?: {id: string; name: string; image: string | null},
+		user?: {id: string; name: string; image: string | null}
 	): iTaskContent {
 		return {
 			id: record.id,
@@ -46,13 +50,15 @@ export default class TaskContentsService {
 			.where(eq(taskContents.taskId, taskId))
 			.orderBy(asc(taskContents.sortOrder), asc(taskContents.createdAt));
 
-		return records.map((r) => {return this.toDTO(r.content, r.user);});
+		return records.map((r) => {
+			return this.toDTO(r.content, r.user);
+		});
 	}
 
 	public async createContent(
 		userId: string,
 		taskId: string,
-		input: iCreateTaskContentDTO,
+		input: iCreateTaskContentDTO
 	): Promise<iTaskContent> {
 		logger.silly("Creating task content");
 
@@ -85,7 +91,7 @@ export default class TaskContentsService {
 	public async updateContent(
 		userId: string,
 		contentId: string,
-		input: iUpdateTaskContentDTO,
+		input: iUpdateTaskContentDTO
 	): Promise<iTaskContent> {
 		logger.silly("Updating task content");
 
@@ -98,23 +104,33 @@ export default class TaskContentsService {
 		if (!existing[0]) {
 			throw new ServiceError(
 				httpStatusCodes.CLIENT_ERROR_NOT_FOUND,
-				taskServiceError.updateTaskContent.ContentNotFound,
+				taskServiceError.updateTaskContent.ContentNotFound
 			);
 		}
 
 		if (existing[0].createdById !== userId) {
 			throw new ServiceError(
 				httpStatusCodes.CLIENT_ERROR_FORBIDDEN,
-				taskServiceError.updateTaskContent.NotContentOwner,
+				taskServiceError.updateTaskContent.NotContentOwner
 			);
 		}
 
 		const updateValues: Record<string, unknown> = {};
-		if (input.title !== undefined) {updateValues.title = input.title;}
-		if (input.content !== undefined) {updateValues.content = input.content;}
-		if (input.language !== undefined) {updateValues.language = input.language;}
-		if (input.url !== undefined) {updateValues.url = input.url;}
-		if (input.sortOrder !== undefined) {updateValues.sortOrder = input.sortOrder;}
+		if (input.title !== undefined) {
+			updateValues.title = input.title;
+		}
+		if (input.content !== undefined) {
+			updateValues.content = input.content;
+		}
+		if (input.language !== undefined) {
+			updateValues.language = input.language;
+		}
+		if (input.url !== undefined) {
+			updateValues.url = input.url;
+		}
+		if (input.sortOrder !== undefined) {
+			updateValues.sortOrder = input.sortOrder;
+		}
 
 		const result = await db
 			.update(taskContents)
@@ -146,14 +162,14 @@ export default class TaskContentsService {
 		if (!existing[0]) {
 			throw new ServiceError(
 				httpStatusCodes.CLIENT_ERROR_NOT_FOUND,
-				taskServiceError.deleteTaskContent.ContentNotFound,
+				taskServiceError.deleteTaskContent.ContentNotFound
 			);
 		}
 
 		if (existing[0].createdById !== userId) {
 			throw new ServiceError(
 				httpStatusCodes.CLIENT_ERROR_FORBIDDEN,
-				taskServiceError.deleteTaskContent.NotContentOwner,
+				taskServiceError.deleteTaskContent.NotContentOwner
 			);
 		}
 

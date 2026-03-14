@@ -10,7 +10,11 @@
 import {db} from "@pluteojs/database";
 import {betterAuth} from "better-auth";
 import {drizzleAdapter} from "better-auth/adapters/drizzle";
-import {betterAuthSharedConfig, corePlugins, devPlugins} from "./auth.shared.js";
+import {
+	betterAuthSharedConfig,
+	corePlugins,
+	devPlugins,
+} from "./auth.shared.js";
 
 /**
  * For schema generation, include ALL plugins to ensure complete schema

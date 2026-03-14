@@ -9,6 +9,7 @@ import boardsRoute from "./boardsRoute";
 import tasksRoute from "./tasksRoute";
 import membersRoute from "./membersRoute";
 import notificationsRoute from "./notificationsRoute";
+import autoSortRulesRoute from "./autoSortRulesRoute";
 
 /**
  * Registers all v1 API routes.
@@ -44,6 +45,9 @@ export const registerV1Routes = (): Router => {
 
 	// Notification routes
 	notificationsRoute(v1Router);
+
+	// Auto-sort rules routes
+	autoSortRulesRoute(v1Router);
 
 	return v1Router;
 };

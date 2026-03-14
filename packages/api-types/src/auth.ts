@@ -31,4 +31,6 @@ export const resetPasswordRequestSchema = z.object({
  */
 export type SignupBody = z.infer<typeof signupBodySchema>;
 export type SigninBody = z.infer<typeof signinBodySchema>;
-export type ResetPasswordRequestBody = z.infer<typeof resetPasswordRequestSchema>;
+export type ResetPasswordRequestBody = z.infer<
+	typeof resetPasswordRequestSchema
+>;

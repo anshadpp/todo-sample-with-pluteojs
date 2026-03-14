@@ -11,11 +11,13 @@ export const commentSchema = z.object({
 	isEdited: z.boolean(),
 	createdAt: z.string().datetime(),
 	updatedAt: z.string().datetime(),
-	user: z.object({
-		id: uuidv4Schema,
-		name: z.string(),
-		image: z.string().nullable(),
-	}).optional(),
+	user: z
+		.object({
+			id: uuidv4Schema,
+			name: z.string(),
+			image: z.string().nullable(),
+		})
+		.optional(),
 });
 
 export const createCommentBodySchema = z.object({

@@ -1,6 +1,9 @@
 import type {RequestHandler, Response} from "express";
 
-import type {iResponseError, iGenericAPIResponse} from "@customTypes/responseTypes";
+import type {
+	iResponseError,
+	iGenericAPIResponse,
+} from "@customTypes/responseTypes";
 import {httpStatusCodes} from "@customTypes/networkTypes";
 
 // Import expressTypes to ensure the global augmentation is applied

@@ -16,11 +16,13 @@ export const taskContentSchema = z.object({
 	sortOrder: z.number(),
 	createdAt: z.string().datetime(),
 	updatedAt: z.string().datetime(),
-	user: z.object({
-		id: uuidv4Schema,
-		name: z.string(),
-		image: z.string().nullable(),
-	}).optional(),
+	user: z
+		.object({
+			id: uuidv4Schema,
+			name: z.string(),
+			image: z.string().nullable(),
+		})
+		.optional(),
 });
 
 export const createTaskContentBodySchema = z.object({

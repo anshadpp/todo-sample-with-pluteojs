@@ -19,11 +19,11 @@ export const labels = pgTable(
 			.references(() => projects.id, {onDelete: "cascade"}),
 		name: text("name").notNull(),
 		color: text("color").notNull(),
-		createdAt: timestamp("created_at", {withTimezone: true}).defaultNow().notNull(),
+		createdAt: timestamp("created_at", {withTimezone: true})
+			.defaultNow()
+			.notNull(),
 	},
-	(table) => [
-		index("labels_projectId_idx").on(table.projectId),
-	],
+	(table) => [index("labels_projectId_idx").on(table.projectId)]
 );
 
 export const taskLabels = pgTable(
@@ -41,7 +41,7 @@ export const taskLabels = pgTable(
 		index("taskLabels_taskId_idx").on(table.taskId),
 		index("taskLabels_labelId_idx").on(table.labelId),
 		uniqueIndex("taskLabels_task_label_uidx").on(table.taskId, table.labelId),
-	],
+	]
 );
 
 export type Label = typeof labels.$inferSelect;
