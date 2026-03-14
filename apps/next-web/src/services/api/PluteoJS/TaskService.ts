@@ -163,7 +163,7 @@ function TaskService(apiServer: AxiosInstance) {
 		let result = null;
 
 		await apiServer
-			.post(apiEndpoints.tasks.move(taskId), data, {
+			.patch(apiEndpoints.tasks.move(taskId), data, {
 				withCredentials: true,
 			})
 			.then(
