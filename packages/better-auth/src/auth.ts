@@ -12,7 +12,11 @@ import {db} from "@pluteojs/database";
 import * as schema from "@pluteojs/database/schema";
 
 import config from "@/config/index.js";
-import {betterAuthSharedConfig, corePlugins, devPlugins} from "./auth.shared.js";
+import {
+	betterAuthSharedConfig,
+	corePlugins,
+	devPlugins,
+} from "./auth.shared.js";
 
 /**
  * Determine which plugins to use based on environment.

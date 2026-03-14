@@ -9,14 +9,16 @@ export const authRouteErrors = asTypeIResponseError({
 		// HTTP Status Code: 400
 		BadRequest: {
 			error: "BAD_REQUEST",
-			message: "The request could not be understood or was missing required parameters.",
+			message:
+				"The request could not be understood or was missing required parameters.",
 			details: null,
 		},
 
 		// HTTP Status Code: 401
 		Unauthorized: {
 			error: "UNAUTHORIZED",
-			message: "Authentication is required and has failed or has not yet been provided.",
+			message:
+				"Authentication is required and has failed or has not yet been provided.",
 			details: null,
 		},
 
@@ -37,14 +39,16 @@ export const authRouteErrors = asTypeIResponseError({
 		// HTTP Status Code: 422
 		UnprocessableEntity: {
 			error: "UNPROCESSABLE_ENTITY",
-			message: "The request was well-formed but was unable to be followed due to semantic errors.",
+			message:
+				"The request was well-formed but was unable to be followed due to semantic errors.",
 			details: null,
 		},
 
 		// HTTP Status Code: 429
 		TooManyRequests: {
 			error: "TOO_MANY_REQUESTS",
-			message: "Too many requests have been made in a short period. Please try again later.",
+			message:
+				"Too many requests have been made in a short period. Please try again later.",
 			details: null,
 		},
 

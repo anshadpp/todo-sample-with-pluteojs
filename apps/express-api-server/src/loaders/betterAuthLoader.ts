@@ -4,7 +4,10 @@
  * Configures the better-auth email handlers with the application's email service.
  * This must be called during app initialization before better-auth routes are used.
  */
-import {configureEmailHandlers, type iEmailSendOptions} from "@pluteojs/better-auth";
+import {
+	configureEmailHandlers,
+	type iEmailSendOptions,
+} from "@pluteojs/better-auth";
 
 import config from "@config";
 import logger from "@loaders/logger";
@@ -29,7 +32,10 @@ async function sendEmail(options: iEmailSendOptions): Promise<void> {
 			html
 		);
 	} catch (error) {
-		logger.error(null, `Failed to send email to ${to}: ${(error as Error).message}`);
+		logger.error(
+			null,
+			`Failed to send email to ${to}: ${(error as Error).message}`
+		);
 	}
 }
 

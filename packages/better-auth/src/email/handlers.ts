@@ -62,7 +62,9 @@ let emailConfig: iEmailHandlerConfig | null = null;
  *
  * @param config - Email handler configuration
  */
-export function configureEmailHandlers(handlerConfig: iEmailHandlerConfig): void {
+export function configureEmailHandlers(
+	handlerConfig: iEmailHandlerConfig
+): void {
 	emailConfig = handlerConfig;
 }
 
@@ -274,7 +276,11 @@ async function handleOrgInviteEmail(
 			organizationName: data.organization.name,
 		});
 	} catch (error) {
-		logger.error(requestId, "Failed to send organization invitation email", error);
+		logger.error(
+			requestId,
+			"Failed to send organization invitation email",
+			error
+		);
 
 		/**
 		 * Re-throwing the error to break the better auth flow as sending the invitation email

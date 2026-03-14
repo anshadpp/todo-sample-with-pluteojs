@@ -25,7 +25,9 @@ import type {iResponseError} from "@customTypes/responseTypes";
  * const data = await safelyParseBodyFromResponse(response);
  * // data will be an object, or {} if the response body was empty or invalid
  */
-async function safelyParseBodyFromResponse(response: Response): Promise<unknown> {
+async function safelyParseBodyFromResponse(
+	response: Response
+): Promise<unknown> {
 	try {
 		// Only attempt to parse if the response body is not null
 		if (response.body !== null) {

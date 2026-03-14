@@ -37,24 +37,24 @@ This package provides a pre-configured Better Auth instance with:
 
 ## Features
 
-| Feature | Description |
-|---------|-------------|
-| **JWT Authentication** | Token-based authentication with configurable signing |
-| **Bearer Tokens** | API authentication with signature verification |
-| **Organizations** | Multi-tenant support with up to 5 orgs per user |
-| **Teams** | Team management within organizations (up to 10 teams) |
-| **Invitations** | Email-based organization invitations |
-| **RBAC** | Owner, Admin, and Member roles with customizable permissions |
-| **Email Verification** | Configurable email verification on signup |
-| **Password Reset** | Secure password reset flow |
-| **OpenAPI** | API documentation in development mode |
+| Feature                | Description                                                  |
+| ---------------------- | ------------------------------------------------------------ |
+| **JWT Authentication** | Token-based authentication with configurable signing         |
+| **Bearer Tokens**      | API authentication with signature verification               |
+| **Organizations**      | Multi-tenant support with up to 5 orgs per user              |
+| **Teams**              | Team management within organizations (up to 10 teams)        |
+| **Invitations**        | Email-based organization invitations                         |
+| **RBAC**               | Owner, Admin, and Member roles with customizable permissions |
+| **Email Verification** | Configurable email verification on signup                    |
+| **Password Reset**     | Secure password reset flow                                   |
+| **OpenAPI**            | API documentation in development mode                        |
 
 ## Installation
 
 This package is part of the monorepo and is already configured. To use it in an app:
 
 ```typescript
-import { auth, config } from "@pluteojs/better-auth";
+import {auth, config} from "@pluteojs/better-auth";
 ```
 
 ## Configuration
@@ -75,14 +75,14 @@ BETTER_AUTH_COOKIE_SAME_SITE=lax         # lax, strict, or none
 BETTER_AUTH_ENABLE_RESPONSE_ENVELOPE=true # Wrap responses in envelope
 ```
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `BETTER_AUTH_SECRET` | Yes | - | Min 64 chars. Used for signing tokens and cookies |
-| `BETTER_AUTH_BASE_URL` | Yes | - | Full URL where auth endpoints are accessible |
-| `BETTER_AUTH_BASE_PATH` | No | `/api/auth` | Base path for auth routes |
-| `BETTER_AUTH_COOKIE_SECURE` | No | `false` | Use secure cookies (HTTPS only) |
-| `BETTER_AUTH_COOKIE_SAME_SITE` | No | `lax` | Cookie SameSite attribute |
-| `BETTER_AUTH_ENABLE_RESPONSE_ENVELOPE` | No | `true` | Wrap responses in standard envelope |
+| Variable                               | Required | Default     | Description                                       |
+| -------------------------------------- | -------- | ----------- | ------------------------------------------------- |
+| `BETTER_AUTH_SECRET`                   | Yes      | -           | Min 64 chars. Used for signing tokens and cookies |
+| `BETTER_AUTH_BASE_URL`                 | Yes      | -           | Full URL where auth endpoints are accessible      |
+| `BETTER_AUTH_BASE_PATH`                | No       | `/api/auth` | Base path for auth routes                         |
+| `BETTER_AUTH_COOKIE_SECURE`            | No       | `false`     | Use secure cookies (HTTPS only)                   |
+| `BETTER_AUTH_COOKIE_SAME_SITE`         | No       | `lax`       | Cookie SameSite attribute                         |
+| `BETTER_AUTH_ENABLE_RESPONSE_ENVELOPE` | No       | `true`      | Wrap responses in standard envelope               |
 
 ### Email Handlers Setup
 
@@ -92,35 +92,40 @@ Email handlers must be configured before using authentication features that send
 
 ```typescript
 // apps/express-api-server/src/loaders/betterAuthLoader.ts
-import { configureEmailHandlers, type iEmailSendOptions } from "@pluteojs/better-auth";
+import {
+	configureEmailHandlers,
+	type iEmailSendOptions,
+} from "@pluteojs/better-auth";
 import config from "@config";
 import logger from "@loaders/logger";
 import emailServiceUtil from "@util/emailServiceUtil";
 
 async function sendEmail(options: iEmailSendOptions): Promise<void> {
-  await emailServiceUtil.sendTransactionHtmlEmail(
-    options.from,
-    options.to,
-    null, // cc
-    null, // bcc
-    options.subject,
-    options.text || "",
-    options.html
-  );
+	await emailServiceUtil.sendTransactionHtmlEmail(
+		options.from,
+		options.to,
+		null, // cc
+		null, // bcc
+		options.subject,
+		options.text || "",
+		options.html
+	);
 }
 
 export default function loadBetterAuth(): void {
-  configureEmailHandlers({
-    sender: sendEmail,
-    logger: {
-      info: (requestId, message, data) => logger.info(requestId, message, null, data),
-      error: (requestId, message, error) => logger.error(requestId, message, error),
-    },
-    fromAddress: config.emailService.transactionalEmail.smtpFromAddress,
-    appName: config.serviceInfo.name || "PluteoJS",
-  });
+	configureEmailHandlers({
+		sender: sendEmail,
+		logger: {
+			info: (requestId, message, data) =>
+				logger.info(requestId, message, null, data),
+			error: (requestId, message, error) =>
+				logger.error(requestId, message, error),
+		},
+		fromAddress: config.emailService.transactionalEmail.smtpFromAddress,
+		appName: config.serviceInfo.name || "PluteoJS",
+	});
 
-  logger.info(null, "Better Auth email handlers configured");
+	logger.info(null, "Better Auth email handlers configured");
 }
 ```
 
@@ -131,12 +136,12 @@ export default function loadBetterAuth(): void {
 import loadBetterAuth from "@loaders/betterAuthLoader";
 import loadExpress from "@loaders/expressLoader";
 
-const loader = async ({ expressApp }) => {
-  // Configure better-auth email handlers FIRST
-  loadBetterAuth();
+const loader = async ({expressApp}) => {
+	// Configure better-auth email handlers FIRST
+	loadBetterAuth();
 
-  // Then load express routes
-  await loadExpress({ app: expressApp });
+	// Then load express routes
+	await loadExpress({app: expressApp});
 };
 ```
 
@@ -146,33 +151,38 @@ const loader = async ({ expressApp }) => {
 
 ```typescript
 // apps/express-api-server/src/api/routes/betterAuthRoute.ts
-import type { Router } from "express";
-import { fromNodeHeaders } from "better-auth/node";
-import { auth, isEndpointAllowed } from "@pluteojs/better-auth";
+import type {Router} from "express";
+import {fromNodeHeaders} from "better-auth/node";
+import {auth, isEndpointAllowed} from "@pluteojs/better-auth";
 
 export default (route: Router): void => {
-  route.all(/^\/auth\/.*/, async (req, res) => {
-    // Check endpoint allowlist
-    if (!isEndpointAllowed(req.path, req.method)) {
-      return res.status(404).json({ error: "Not found" });
-    }
+	route.all(/^\/auth\/.*/, async (req, res) => {
+		// Check endpoint allowlist
+		if (!isEndpointAllowed(req.path, req.method)) {
+			return res.status(404).json({error: "Not found"});
+		}
 
-    // Create Web Request
-    const url = new URL(req.originalUrl, `${req.protocol}://${req.get("host")}`);
-    const webRequest = new Request(url.toString(), {
-      method: req.method,
-      headers: fromNodeHeaders(req.headers),
-      body: ["GET", "HEAD"].includes(req.method) ? undefined : JSON.stringify(req.body),
-    });
+		// Create Web Request
+		const url = new URL(
+			req.originalUrl,
+			`${req.protocol}://${req.get("host")}`
+		);
+		const webRequest = new Request(url.toString(), {
+			method: req.method,
+			headers: fromNodeHeaders(req.headers),
+			body: ["GET", "HEAD"].includes(req.method)
+				? undefined
+				: JSON.stringify(req.body),
+		});
 
-    // Handle with better-auth
-    const response = await auth.handler(webRequest);
+		// Handle with better-auth
+		const response = await auth.handler(webRequest);
 
-    // Return response (preserving cookies)
-    response.headers.forEach((value, key) => res.setHeader(key, value));
-    const body = await response.json();
-    res.status(response.status).json(body);
-  });
+		// Return response (preserving cookies)
+		response.headers.forEach((value, key) => res.setHeader(key, value));
+		const body = await response.json();
+		res.status(response.status).json(body);
+	});
 };
 ```
 
@@ -180,24 +190,28 @@ export default (route: Router): void => {
 
 ```typescript
 // apps/express-api-server/src/api/middlewares/authorizationMiddleware.ts
-import type { Request, Response, NextFunction } from "express";
-import { fromNodeHeaders } from "better-auth/node";
-import { auth } from "@pluteojs/better-auth";
+import type {Request, Response, NextFunction} from "express";
+import {fromNodeHeaders} from "better-auth/node";
+import {auth} from "@pluteojs/better-auth";
 
-export async function isAuthorized(req: Request, res: Response, next: NextFunction) {
-  const session = await auth.api.getSession({
-    headers: fromNodeHeaders(req.headers),
-  });
+export async function isAuthorized(
+	req: Request,
+	res: Response,
+	next: NextFunction
+) {
+	const session = await auth.api.getSession({
+		headers: fromNodeHeaders(req.headers),
+	});
 
-  if (!session?.user) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
+	if (!session?.user) {
+		return res.status(401).json({error: "Unauthorized"});
+	}
 
-  // Attach to request for downstream use
-  req.session = session.session;
-  req.user = session.user;
+	// Attach to request for downstream use
+	req.session = session.session;
+	req.user = session.user;
 
-  next();
+	next();
 }
 ```
 
@@ -206,46 +220,49 @@ export async function isAuthorized(req: Request, res: Response, next: NextFuncti
 The package includes a security allowlist to prevent exposing unintended Better Auth endpoints:
 
 ```typescript
-import { isEndpointAllowed, defaultAllowedEndpoints } from "@pluteojs/better-auth";
+import {
+	isEndpointAllowed,
+	defaultAllowedEndpoints,
+} from "@pluteojs/better-auth";
 
 // Check if endpoint is allowed
 if (!isEndpointAllowed("/auth/sign-in/email", "POST")) {
-  // Block request
+	// Block request
 }
 
 // Use custom allowlist
 const customAllowlist = {
-  "/auth/sign-in/email": ["POST"],
-  "/auth/sign-out": ["POST"],
+	"/auth/sign-in/email": ["POST"],
+	"/auth/sign-out": ["POST"],
 };
 
 if (!isEndpointAllowed("/auth/sign-in/email", "POST", customAllowlist)) {
-  // Block request
+	// Block request
 }
 ```
 
 **Available Endpoints:**
 
-| Category | Endpoints |
-|----------|-----------|
-| **Auth Core** | `sign-up/email`, `sign-in/email`, `sign-out`, `get-session` |
-| **Email** | `verify-email`, `send-verification-email` |
-| **Password** | `forget-password`, `reset-password` |
-| **JWT** | `token`, `jwks` |
-| **Organization** | `create`, `list`, `get-full-organization`, `set-active`, `update`, `delete` |
-| **Invitations** | `invite-member`, `accept-invitation`, `reject-invitation`, `cancel-invitation`, `get-invitation` |
-| **Members** | `remove-member`, `update-member-role` |
-| **Teams** | `create-team`, `list-teams`, `update-team`, `remove-team`, `add-team-member`, `remove-team-member`, `add-team-members` |
+| Category         | Endpoints                                                                                                              |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **Auth Core**    | `sign-up/email`, `sign-in/email`, `sign-out`, `get-session`                                                            |
+| **Email**        | `verify-email`, `send-verification-email`                                                                              |
+| **Password**     | `forget-password`, `reset-password`                                                                                    |
+| **JWT**          | `token`, `jwks`                                                                                                        |
+| **Organization** | `create`, `list`, `get-full-organization`, `set-active`, `update`, `delete`                                            |
+| **Invitations**  | `invite-member`, `accept-invitation`, `reject-invitation`, `cancel-invitation`, `get-invitation`                       |
+| **Members**      | `remove-member`, `update-member-role`                                                                                  |
+| **Teams**        | `create-team`, `list-teams`, `update-team`, `remove-team`, `add-team-member`, `remove-team-member`, `add-team-members` |
 
 ## Plugins
 
 ### Core Plugins (Always Enabled)
 
-| Plugin | Configuration |
-|--------|---------------|
-| **JWT** | Default settings |
-| **Bearer** | `requireSignature: true` |
-| **Organization** | See below |
+| Plugin           | Configuration            |
+| ---------------- | ------------------------ |
+| **JWT**          | Default settings         |
+| **Bearer**       | `requireSignature: true` |
+| **Organization** | See below                |
 
 **Organization Plugin Settings:**
 
@@ -268,19 +285,19 @@ if (!isEndpointAllowed("/auth/sign-in/email", "POST", customAllowlist)) {
 
 ### Development Plugins
 
-| Plugin | Description |
-|--------|-------------|
+| Plugin      | Description                                       |
+| ----------- | ------------------------------------------------- |
 | **OpenAPI** | API documentation at `/auth/reference` (dev only) |
 
 ## Access Control
 
 ### Roles
 
-| Role | Description | Default Permissions |
-|------|-------------|---------------------|
-| **owner** | Full access to everything | All CRUD on projects, resources |
-| **admin** | Can manage most resources | Create, read, update projects; read resources |
-| **member** | Basic read access | Read-only on projects and resources |
+| Role       | Description               | Default Permissions                           |
+| ---------- | ------------------------- | --------------------------------------------- |
+| **owner**  | Full access to everything | All CRUD on projects, resources               |
+| **admin**  | Can manage most resources | Create, read, update projects; read resources |
+| **member** | Basic read access         | Read-only on projects and resources           |
 
 ### Permission Statements
 
@@ -298,30 +315,30 @@ To add custom permissions, edit `src/permissions/accessControl.ts`:
 
 ```typescript
 const permissionStatements = {
-  ...defaultStatements,
-  project: ["create", "read", "update", "delete"],
-  resource: ["create", "read", "update", "delete"],
-  // Add your custom permissions
-  document: ["create", "read", "update", "delete", "share"],
-  report: ["create", "read", "export"],
+	...defaultStatements,
+	project: ["create", "read", "update", "delete"],
+	resource: ["create", "read", "update", "delete"],
+	// Add your custom permissions
+	document: ["create", "read", "update", "delete", "share"],
+	report: ["create", "read", "export"],
 } as const;
 
 // Update roles accordingly
 const admin = accessControl.newRole({
-  ...defaultAdminAc.statements,
-  project: ["create", "read", "update"],
-  document: ["create", "read", "update"],  // Add to admin
+	...defaultAdminAc.statements,
+	project: ["create", "read", "update"],
+	document: ["create", "read", "update"], // Add to admin
 });
 ```
 
 ### Using Access Control
 
 ```typescript
-import { accessControl, roles } from "@pluteojs/better-auth";
+import {accessControl, roles} from "@pluteojs/better-auth";
 
 // Check if role has permission
 const canCreate = roles.admin.authorize({
-  project: ["create"],
+	project: ["create"],
 });
 ```
 
@@ -342,24 +359,25 @@ This generates the schema to `packages/database/src/schema/betterAuth/betterAuth
 
 ### Tables
 
-| Table | Description |
-|-------|-------------|
-| `users` | User accounts |
-| `sessions` | Active sessions with `activeOrganizationId`, `activeTeamId` |
-| `accounts` | OAuth/linked accounts, password hashes |
-| `verifications` | Email verification and password reset tokens |
-| `jwkss` | JWT signing keys |
-| `organizations` | Organization entities |
-| `members` | Organization memberships with roles |
-| `teams` | Teams within organizations |
-| `teamMembers` | Team memberships |
-| `invitations` | Pending organization invitations |
+| Table           | Description                                                 |
+| --------------- | ----------------------------------------------------------- |
+| `users`         | User accounts                                               |
+| `sessions`      | Active sessions with `activeOrganizationId`, `activeTeamId` |
+| `accounts`      | OAuth/linked accounts, password hashes                      |
+| `verifications` | Email verification and password reset tokens                |
+| `jwkss`         | JWT signing keys                                            |
+| `organizations` | Organization entities                                       |
+| `members`       | Organization memberships with roles                         |
+| `teams`         | Teams within organizations                                  |
+| `teamMembers`   | Team memberships                                            |
+| `invitations`   | Pending organization invitations                            |
 
 ### Migration Process
 
 **Never use `npx better-auth migrate` directly.** Follow this process:
 
 1. Generate schema:
+
    ```bash
    pnpm --filter @pluteojs/better-auth better-auth:generate
    ```
@@ -369,6 +387,7 @@ This generates the schema to `packages/database/src/schema/betterAuth/betterAuth
    - Change `userId` fields from `text` to `uuid`
 
 3. Generate migration with Drizzle:
+
    ```bash
    pnpm --filter @pluteojs/database db:generate
    ```
@@ -408,11 +427,11 @@ packages/better-auth/
 
 This package uses a three-file pattern to solve CLI path alias resolution issues:
 
-| File | Purpose | Path Aliases |
-|------|---------|--------------|
+| File             | Purpose                                   | Path Aliases       |
+| ---------------- | ----------------------------------------- | ------------------ |
 | `auth.shared.ts` | Common settings shared by runtime and CLI | No (relative only) |
-| `auth.ts` | Runtime configuration with database | Yes |
-| `auth.cli.ts` | CLI configuration for schema generation | No (relative only) |
+| `auth.ts`        | Runtime configuration with database       | Yes                |
+| `auth.cli.ts`    | CLI configuration for schema generation   | No (relative only) |
 
 **Why?** The Better Auth CLI uses `jiti` which doesn't resolve TypeScript path aliases. By keeping shared configuration in a file with relative imports, both runtime and CLI can use the same settings.
 
@@ -422,35 +441,42 @@ This package uses a three-file pattern to solve CLI path alias resolution issues
 
 ```typescript
 // Main auth instance
-export { auth } from "./auth.js";
-export type { Auth } from "./auth.js";
+export {auth} from "./auth.js";
+export type {Auth} from "./auth.js";
 
 // Configuration
-export { config } from "./config/index.js";
-export type { EnvConfig } from "./config/index.js";
+export {config} from "./config/index.js";
+export type {EnvConfig} from "./config/index.js";
 
 // Endpoint security
-export { isEndpointAllowed, defaultAllowedEndpoints } from "./config/allowedEndpoints.js";
+export {
+	isEndpointAllowed,
+	defaultAllowedEndpoints,
+} from "./config/allowedEndpoints.js";
 
 // Access control
-export { accessControl, roles } from "./permissions/accessControl.js";
+export {accessControl, roles} from "./permissions/accessControl.js";
 
 // Email configuration
-export { configureEmailHandlers } from "./email/handlers.js";
-export type { iEmailSendOptions, EmailSenderFn, iEmailLogger } from "./email/handlers.js";
+export {configureEmailHandlers} from "./email/handlers.js";
+export type {
+	iEmailSendOptions,
+	EmailSenderFn,
+	iEmailLogger,
+} from "./email/handlers.js";
 
 // Types
 export type {
-  AuthSession,
-  ExtendedUser,
-  ExtendedSession,
-  OrganizationInviteEmailData,
-  EmailVerificationData,
-  PasswordResetEmailData,
+	AuthSession,
+	ExtendedUser,
+	ExtendedSession,
+	OrganizationInviteEmailData,
+	EmailVerificationData,
+	PasswordResetEmailData,
 } from "./types/index.js";
 
 // Re-exports from better-auth
-export type { Session, User } from "better-auth";
+export type {Session, User} from "better-auth";
 ```
 
 ### `configureEmailHandlers(config)`
@@ -459,18 +485,18 @@ Configures the email sending functionality for Better Auth.
 
 ```typescript
 interface iEmailHandlerConfig {
-  sender: EmailSenderFn;      // Required: function to send emails
-  logger?: iEmailLogger;      // Optional: custom logger
-  fromAddress: string;        // Required: sender email address
-  appName?: string;           // Optional: app name for email templates
+	sender: EmailSenderFn; // Required: function to send emails
+	logger?: iEmailLogger; // Optional: custom logger
+	fromAddress: string; // Required: sender email address
+	appName?: string; // Optional: app name for email templates
 }
 
 interface iEmailSendOptions {
-  from: string;
-  to: string;
-  subject: string;
-  html: string;
-  text?: string;
+	from: string;
+	to: string;
+	subject: string;
+	html: string;
+	text?: string;
 }
 
 type EmailSenderFn = (options: iEmailSendOptions) => Promise<void>;
@@ -482,9 +508,9 @@ Checks if an endpoint is in the security allowlist.
 
 ```typescript
 function isEndpointAllowed(
-  path: string,           // e.g., "/auth/sign-in/email"
-  method: string,         // e.g., "POST"
-  allowlist?: Record<string, string[]>  // Optional custom allowlist
+	path: string, // e.g., "/auth/sign-in/email"
+	method: string, // e.g., "POST"
+	allowlist?: Record<string, string[]> // Optional custom allowlist
 ): boolean;
 ```
 
@@ -527,10 +553,10 @@ If you get type errors after modifying plugins:
 Ensure the session has an active organization:
 
 ```typescript
-const session = await auth.api.getSession({ headers });
+const session = await auth.api.getSession({headers});
 
 if (!session?.session.activeOrganizationId) {
-  // User needs to select/create an organization
+	// User needs to select/create an organization
 }
 ```
 

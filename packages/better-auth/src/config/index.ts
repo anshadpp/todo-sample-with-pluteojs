@@ -10,7 +10,9 @@ function loadConfig() {
 
 	if (!result.success) {
 		console.error("Better-Auth configuration error:", result.error.format());
-		throw new Error("Invalid better-auth configuration. Check environment variables.");
+		throw new Error(
+			"Invalid better-auth configuration. Check environment variables."
+		);
 	}
 
 	const env = result.data;
@@ -33,5 +35,8 @@ function loadConfig() {
 const config = loadConfig();
 
 export default config;
-export {defaultAllowedEndpoints, isEndpointAllowed} from "./allowedEndpoints.js";
+export {
+	defaultAllowedEndpoints,
+	isEndpointAllowed,
+} from "./allowedEndpoints.js";
 export type {EnvConfig} from "./envSchema.js";

@@ -11,7 +11,10 @@ export type {Auth} from "./auth.js";
 
 // Configuration exports
 export {default as config} from "./config/index.js";
-export {isEndpointAllowed, defaultAllowedEndpoints} from "./config/allowedEndpoints.js";
+export {
+	isEndpointAllowed,
+	defaultAllowedEndpoints,
+} from "./config/allowedEndpoints.js";
 export type {EnvConfig} from "./config/envSchema.js";
 
 // Permission exports
@@ -34,4 +37,3 @@ export type {
 	EmailVerificationData,
 	PasswordResetEmailData,
 } from "./types/index.js";
-

@@ -4,4 +4,7 @@
  * These utilities can be imported via "@pluteojs/better-auth/util"
  */
 
-export {isEndpointAllowed, defaultAllowedEndpoints} from "../config/allowedEndpoints.js";
+export {
+	isEndpointAllowed,
+	defaultAllowedEndpoints,
+} from "../config/allowedEndpoints.js";
