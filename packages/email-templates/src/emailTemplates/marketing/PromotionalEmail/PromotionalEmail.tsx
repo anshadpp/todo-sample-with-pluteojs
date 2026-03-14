@@ -152,7 +152,8 @@ export function PromotionalEmail({
 
 				{/* Unsubscribe */}
 				<Text style={unsubscribeStyle}>
-					You are receiving this email because you opted in to receive promotional emails.
+					You are receiving this email because you opted in to receive
+					promotional emails.
 					<br />
 					<Link href={unsubscribeUrl} style={unsubscribeLinkStyle}>
 						Unsubscribe

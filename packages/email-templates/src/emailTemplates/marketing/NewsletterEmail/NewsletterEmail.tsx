@@ -70,11 +70,7 @@ export function NewsletterEmail({
 
 				{/* Hero Image */}
 				{heroImageUrl && (
-					<Img
-						src={heroImageUrl}
-						alt={heroTitle}
-						style={heroImageStyle}
-					/>
+					<Img src={heroImageUrl} alt={heroTitle} style={heroImageStyle} />
 				)}
 
 				{/* Hero Content */}

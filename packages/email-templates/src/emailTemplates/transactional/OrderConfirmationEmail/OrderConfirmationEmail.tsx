@@ -133,29 +133,71 @@ export function OrderConfirmationEmail({
 				<Section>
 					<Row>
 						<Column style={{...tableHeaderStyle, width: "50%"}}>Item</Column>
-						<Column style={{...tableHeaderStyle, width: "20%", textAlign: "center"}}>Qty</Column>
-						<Column style={{...tableHeaderStyle, width: "30%", textAlign: "right"}}>Price</Column>
+						<Column
+							style={{...tableHeaderStyle, width: "20%", textAlign: "center"}}
+						>
+							Qty
+						</Column>
+						<Column
+							style={{...tableHeaderStyle, width: "30%", textAlign: "right"}}
+						>
+							Price
+						</Column>
 					</Row>
 					{items.map((item, index) => (
 						<Row key={index}>
-							<Column style={{...tableCellStyle, width: "50%"}}>{item.name}</Column>
-							<Column style={{...tableCellStyle, width: "20%", textAlign: "center"}}>{item.quantity}</Column>
-							<Column style={{...tableCellStyle, width: "30%", textAlign: "right"}}>{formatCurrency(item.price)}</Column>
+							<Column style={{...tableCellStyle, width: "50%"}}>
+								{item.name}
+							</Column>
+							<Column
+								style={{...tableCellStyle, width: "20%", textAlign: "center"}}
+							>
+								{item.quantity}
+							</Column>
+							<Column
+								style={{...tableCellStyle, width: "30%", textAlign: "right"}}
+							>
+								{formatCurrency(item.price)}
+							</Column>
 						</Row>
 					))}
 
 					{/* Totals */}
 					<Row>
-						<Column style={{...totalRowStyle, width: "70%", textAlign: "right"}}>Subtotal</Column>
-						<Column style={{...totalRowStyle, width: "30%", textAlign: "right"}}>{formatCurrency(subtotal)}</Column>
+						<Column
+							style={{...totalRowStyle, width: "70%", textAlign: "right"}}
+						>
+							Subtotal
+						</Column>
+						<Column
+							style={{...totalRowStyle, width: "30%", textAlign: "right"}}
+						>
+							{formatCurrency(subtotal)}
+						</Column>
 					</Row>
 					<Row>
-						<Column style={{...totalRowStyle, width: "70%", textAlign: "right"}}>Shipping</Column>
-						<Column style={{...totalRowStyle, width: "30%", textAlign: "right"}}>{formatCurrency(shipping)}</Column>
+						<Column
+							style={{...totalRowStyle, width: "70%", textAlign: "right"}}
+						>
+							Shipping
+						</Column>
+						<Column
+							style={{...totalRowStyle, width: "30%", textAlign: "right"}}
+						>
+							{formatCurrency(shipping)}
+						</Column>
 					</Row>
 					<Row>
-						<Column style={{...grandTotalStyle, width: "70%", textAlign: "right"}}>Total</Column>
-						<Column style={{...grandTotalStyle, width: "30%", textAlign: "right"}}>{formatCurrency(total)}</Column>
+						<Column
+							style={{...grandTotalStyle, width: "70%", textAlign: "right"}}
+						>
+							Total
+						</Column>
+						<Column
+							style={{...grandTotalStyle, width: "30%", textAlign: "right"}}
+						>
+							{formatCurrency(total)}
+						</Column>
 					</Row>
 				</Section>
 
@@ -188,7 +230,8 @@ OrderConfirmationEmail.PreviewProps = {
 	subtotal: 248.94,
 	shipping: 9.99,
 	total: 258.93,
-	shippingAddress: "John Doe\n123 Main Street\nApt 4B\nNew York, NY 10001\nUnited States",
+	shippingAddress:
+		"John Doe\n123 Main Street\nApt 4B\nNew York, NY 10001\nUnited States",
 	estimatedDelivery: "Dec 12 - Dec 15",
 } satisfies iOrderConfirmationEmailProps;
 
