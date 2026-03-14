@@ -20,7 +20,9 @@ export const emailVerificationRequestLogs = pgTable(
 		createdAt: timestamp("created_at", {withTimezone: true}),
 		updatedAt: timestamp("updated_at", {withTimezone: true}),
 	},
-	(table) => [index("email_verification_request_logs_email_idx").on(table.email)]
+	(table) => [
+		index("email_verification_request_logs_email_idx").on(table.email),
+	]
 );
 
 // Type inference helpers

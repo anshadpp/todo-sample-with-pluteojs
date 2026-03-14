@@ -4,6 +4,7 @@ import {users, organizations} from "../betterAuth/betterAuth.schema";
 import {projects} from "./projects.schema";
 import {boards} from "./boards.schema";
 import {categories} from "./categories.schema";
+import {autoSortRules} from "./autoSortRules.schema";
 
 export const projectsRelations = relations(projects, ({one, many}) => ({
 	organization: one(organizations, {
@@ -15,6 +16,14 @@ export const projectsRelations = relations(projects, ({one, many}) => ({
 		references: [users.id],
 	}),
 	boards: many(boards),
+	autoSortRules: many(autoSortRules),
+}));
+
+export const autoSortRulesRelations = relations(autoSortRules, ({one}) => ({
+	project: one(projects, {
+		fields: [autoSortRules.projectId],
+		references: [projects.id],
+	}),
 }));
 
 export const boardsRelations = relations(boards, ({one, many}) => ({

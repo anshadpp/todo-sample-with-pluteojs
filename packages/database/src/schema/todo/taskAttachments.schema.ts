@@ -24,11 +24,11 @@ export const taskAttachments = pgTable(
 		fileUrl: text("file_url").notNull(),
 		fileSize: integer("file_size").notNull(),
 		mimeType: text("mime_type").notNull(),
-		createdAt: timestamp("created_at", {withTimezone: true}).defaultNow().notNull(),
+		createdAt: timestamp("created_at", {withTimezone: true})
+			.defaultNow()
+			.notNull(),
 	},
-	(table) => [
-		index("taskAttachments_taskId_idx").on(table.taskId),
-	],
+	(table) => [index("taskAttachments_taskId_idx").on(table.taskId)]
 );
 
 export type TaskAttachment = typeof taskAttachments.$inferSelect;

@@ -26,7 +26,9 @@ export const taskContents = pgTable(
 		language: text("language"), // for code snippets (e.g. "javascript", "python")
 		url: text("url"), // for links
 		sortOrder: integer("sort_order").default(0).notNull(),
-		createdAt: timestamp("created_at", {withTimezone: true}).defaultNow().notNull(),
+		createdAt: timestamp("created_at", {withTimezone: true})
+			.defaultNow()
+			.notNull(),
 		updatedAt: timestamp("updated_at", {withTimezone: true})
 			.defaultNow()
 			.$onUpdate(() => new Date())
@@ -36,7 +38,7 @@ export const taskContents = pgTable(
 		index("taskContents_taskId_idx").on(table.taskId),
 		index("taskContents_createdById_idx").on(table.createdById),
 		index("taskContents_type_idx").on(table.type),
-	],
+	]
 );
 
 export type TaskContent = typeof taskContents.$inferSelect;

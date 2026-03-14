@@ -23,7 +23,9 @@ export const todos = pgTable(
 		dueAt: timestamp("due_at", {withTimezone: true}),
 		notifyAt: timestamp("notify_at", {withTimezone: true}),
 		notified: boolean("notified").default(false).notNull(),
-		createdAt: timestamp("created_at", {withTimezone: true}).defaultNow().notNull(),
+		createdAt: timestamp("created_at", {withTimezone: true})
+			.defaultNow()
+			.notNull(),
 		updatedAt: timestamp("updated_at", {withTimezone: true})
 			.defaultNow()
 			.$onUpdate(() => new Date())
@@ -33,7 +35,7 @@ export const todos = pgTable(
 		index("todos_userId_idx").on(table.userId),
 		index("todos_dueAt_idx").on(table.dueAt),
 		index("todos_notifyAt_idx").on(table.notifyAt),
-	],
+	]
 );
 
 // Relations

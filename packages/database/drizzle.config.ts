@@ -1,6 +1,6 @@
 import {defineConfig} from "drizzle-kit";
 
-import config from "@/config/index.js";
+import config from "./src/config/index";
 
 /**
  * Drizzle Kit configuration for database migrations and schema management.

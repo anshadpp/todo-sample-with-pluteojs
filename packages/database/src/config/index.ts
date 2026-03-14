@@ -2,7 +2,10 @@ import dotenv from "dotenv";
 
 import {databaseEnvSchema} from "@/config/envSchema";
 import {serverModes} from "@/constants/databaseConstants";
-import {createPostgresConnectionUrl, resolveEnvFilePath} from "@/util/configUtil";
+import {
+	createPostgresConnectionUrl,
+	resolveEnvFilePath,
+} from "@/util/configUtil";
 
 /**
  * Database configuration module.

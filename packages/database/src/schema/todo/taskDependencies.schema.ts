@@ -25,13 +25,18 @@ export const taskDependencies = pgTable(
 			.notNull()
 			.references(() => tasks.id, {onDelete: "cascade"}),
 		dependencyType: text("dependency_type").default("blocks").notNull(),
-		createdAt: timestamp("created_at", {withTimezone: true}).defaultNow().notNull(),
+		createdAt: timestamp("created_at", {withTimezone: true})
+			.defaultNow()
+			.notNull(),
 	},
 	(table) => [
 		index("task_deps_dependent_idx").on(table.dependentTaskId),
 		index("task_deps_depends_on_idx").on(table.dependsOnTaskId),
-		uniqueIndex("task_deps_unique_idx").on(table.dependentTaskId, table.dependsOnTaskId),
-	],
+		uniqueIndex("task_deps_unique_idx").on(
+			table.dependentTaskId,
+			table.dependsOnTaskId
+		),
+	]
 );
 
 export type TaskDependency = typeof taskDependencies.$inferSelect;
