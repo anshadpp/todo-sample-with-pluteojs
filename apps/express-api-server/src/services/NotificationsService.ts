@@ -26,7 +26,7 @@ export default class NotificationsService {
 		title: string,
 		body?: string,
 		resourceType?: string,
-		resourceId?: string,
+		resourceId?: string
 	): Promise<iNotification> {
 		const result = await db
 			.insert(notifications)
@@ -43,7 +43,10 @@ export default class NotificationsService {
 		return this.toDTO(result[0]!);
 	}
 
-	public async getNotifications(userId: string, limit = 50): Promise<iNotification[]> {
+	public async getNotifications(
+		userId: string,
+		limit = 50
+	): Promise<iNotification[]> {
 		logger.silly("Retrieving notifications for user");
 
 		const records = await db
@@ -53,29 +56,43 @@ export default class NotificationsService {
 			.orderBy(desc(notifications.createdAt))
 			.limit(limit);
 
-		return records.map((r) => {return this.toDTO(r);});
+		return records.map((r) => {
+			return this.toDTO(r);
+		});
 	}
 
 	public async getUnreadCount(userId: string): Promise<number> {
 		const records = await db
 			.select()
 			.from(notifications)
-			.where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
+			.where(
+				and(eq(notifications.userId, userId), eq(notifications.isRead, false))
+			);
 
 		return records.length;
 	}
 
-	public async markAsRead(notificationId: string, userId: string): Promise<void> {
+	public async markAsRead(
+		notificationId: string,
+		userId: string
+	): Promise<void> {
 		await db
 			.update(notifications)
 			.set({isRead: true, readAt: new Date()})
-			.where(and(eq(notifications.id, notificationId), eq(notifications.userId, userId)));
+			.where(
+				and(
+					eq(notifications.id, notificationId),
+					eq(notifications.userId, userId)
+				)
+			);
 	}
 
 	public async markAllAsRead(userId: string): Promise<void> {
 		await db
 			.update(notifications)
 			.set({isRead: true, readAt: new Date()})
-			.where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
+			.where(
+				and(eq(notifications.userId, userId), eq(notifications.isRead, false))
+			);
 	}
 }

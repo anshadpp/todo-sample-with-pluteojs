@@ -3,7 +3,11 @@ import {db, eq, and, todos, lt, lte} from "@pluteojs/database";
 import logger from "@loaders/logger";
 
 import {httpStatusCodes} from "@customTypes/networkTypes";
-import type {iTodo, iCreateTodoDTO, iUpdateTodoDTO} from "@customTypes/appDataTypes/todoTypes";
+import type {
+	iTodo,
+	iCreateTodoDTO,
+	iUpdateTodoDTO,
+} from "@customTypes/appDataTypes/todoTypes";
 
 import {ServiceError} from "@errors/ServiceError";
 import {todosServiceError} from "@constants/errors/todosServiceErrors";
@@ -24,7 +28,10 @@ export default class TodosService {
 		};
 	}
 
-	public async createTodo(userId: string, input: iCreateTodoDTO): Promise<iTodo> {
+	public async createTodo(
+		userId: string,
+		input: iCreateTodoDTO
+	): Promise<iTodo> {
 		logger.silly("Creating a new todo");
 
 		const result = await db
@@ -52,7 +59,9 @@ export default class TodosService {
 			.where(eq(todos.userId, userId))
 			.orderBy(todos.createdAt);
 
-		return records.map((r) => {return this.toDTO(r);});
+		return records.map((r) => {
+			return this.toDTO(r);
+		});
 	}
 
 	public async getTodo(userId: string, todoId: string): Promise<iTodo> {
@@ -69,22 +78,34 @@ export default class TodosService {
 		if (!record) {
 			throw new ServiceError(
 				httpStatusCodes.CLIENT_ERROR_NOT_FOUND,
-				todosServiceError.getTodo.TodoNotFound,
+				todosServiceError.getTodo.TodoNotFound
 			);
 		}
 
 		return this.toDTO(record);
 	}
 
-	public async updateTodo(userId: string, todoId: string, input: iUpdateTodoDTO): Promise<iTodo> {
+	public async updateTodo(
+		userId: string,
+		todoId: string,
+		input: iUpdateTodoDTO
+	): Promise<iTodo> {
 		logger.silly("Updating todo");
 
 		const updateValues: Record<string, unknown> = {};
 
-		if (input.title !== undefined) {updateValues.title = input.title;}
-		if (input.description !== undefined) {updateValues.description = input.description;}
-		if (input.completed !== undefined) {updateValues.completed = input.completed;}
-		if (input.dueAt !== undefined) {updateValues.dueAt = input.dueAt ? new Date(input.dueAt) : null;}
+		if (input.title !== undefined) {
+			updateValues.title = input.title;
+		}
+		if (input.description !== undefined) {
+			updateValues.description = input.description;
+		}
+		if (input.completed !== undefined) {
+			updateValues.completed = input.completed;
+		}
+		if (input.dueAt !== undefined) {
+			updateValues.dueAt = input.dueAt ? new Date(input.dueAt) : null;
+		}
 		if (input.notifyAt !== undefined) {
 			updateValues.notifyAt = input.notifyAt ? new Date(input.notifyAt) : null;
 			updateValues.notified = false;
@@ -101,7 +122,7 @@ export default class TodosService {
 		if (!record) {
 			throw new ServiceError(
 				httpStatusCodes.CLIENT_ERROR_NOT_FOUND,
-				todosServiceError.updateTodo.TodoNotFound,
+				todosServiceError.updateTodo.TodoNotFound
 			);
 		}
 
@@ -120,7 +141,7 @@ export default class TodosService {
 		if (result.length === 0) {
 			throw new ServiceError(
 				httpStatusCodes.CLIENT_ERROR_NOT_FOUND,
-				todosServiceError.deleteTodo.TodoNotFound,
+				todosServiceError.deleteTodo.TodoNotFound
 			);
 		}
 
@@ -139,21 +160,22 @@ export default class TodosService {
 				and(
 					eq(todos.notified, false),
 					eq(todos.completed, false),
-					lte(todos.notifyAt, now),
-				),
+					lte(todos.notifyAt, now)
+				)
 			);
 
-		return records.map((r) => {return this.toDTO(r);});
+		return records.map((r) => {
+			return this.toDTO(r);
+		});
 	}
 
 	public async markAsNotified(todoIds: string[]): Promise<void> {
-		if (todoIds.length === 0) {return;}
+		if (todoIds.length === 0) {
+			return;
+		}
 
 		for (const id of todoIds) {
-			await db
-				.update(todos)
-				.set({notified: true})
-				.where(eq(todos.id, id));
+			await db.update(todos).set({notified: true}).where(eq(todos.id, id));
 		}
 
 		logger.silly(`Marked ${todoIds.length} todos as notified`);

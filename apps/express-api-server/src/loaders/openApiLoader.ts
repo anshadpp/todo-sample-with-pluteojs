@@ -9,7 +9,9 @@ import {mountDocsHub} from "@api/routes/docsHubRoute";
  */
 const isDevelopment = (): boolean => {
 	const env = process.env.NODE_ENV;
-	return env === serverModes.DEVELOPMENT_LOCAL || env === serverModes.DEVELOPMENT;
+	return (
+		env === serverModes.DEVELOPMENT_LOCAL || env === serverModes.DEVELOPMENT
+	);
 };
 
 /**
@@ -25,7 +27,9 @@ const isDevelopment = (): boolean => {
  */
 export async function loadOpenApi(app: Application): Promise<void> {
 	if (!isDevelopment()) {
-		Logger.loggerInstance.info("OpenAPI docs disabled in non-development environment");
+		Logger.loggerInstance.info(
+			"OpenAPI docs disabled in non-development environment"
+		);
 		return;
 	}
 
@@ -63,7 +67,9 @@ export async function loadOpenApi(app: Application): Promise<void> {
 
 		Logger.loggerInstance.info("OpenAPI docs available at /api/v1/docs");
 	} catch (error) {
-		Logger.loggerInstance.error("Failed to load OpenAPI documentation", {error});
+		Logger.loggerInstance.error("Failed to load OpenAPI documentation", {
+			error,
+		});
 	}
 }
 

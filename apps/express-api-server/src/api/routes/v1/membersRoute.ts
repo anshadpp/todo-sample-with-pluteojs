@@ -13,10 +13,15 @@ export default (route: Router): void => {
 		isAuthorized,
 		async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 			const uniqueRequestId = expressUtil.parseUniqueRequestId(req);
-			logger.debug(uniqueRequestId, "List organization members request received");
+			logger.debug(
+				uniqueRequestId,
+				"List organization members request received"
+			);
 			try {
 				const organizationId = req.headers["x-organization-id"] as string;
-				if (!organizationId) {throw new Error("Organization ID is required");}
+				if (!organizationId) {
+					throw new Error("Organization ID is required");
+				}
 
 				const records = await db
 					.select({
@@ -36,7 +41,7 @@ export default (route: Router): void => {
 			} catch (error) {
 				next(error);
 			}
-		},
+		}
 	);
 
 	// PATCH /members/:memberId/title - Update member title
@@ -48,14 +53,20 @@ export default (route: Router): void => {
 			logger.debug(uniqueRequestId, "Update member title request received");
 			try {
 				const organizationId = req.headers["x-organization-id"] as string;
-				if (!organizationId) {throw new Error("Organization ID is required");}
+				if (!organizationId) {
+					throw new Error("Organization ID is required");
+				}
 
 				const memberId = req.params.memberId as string;
 				const {title} = req.body as {title: string | null};
 
 				if (!memberId) {
 					res.fail(
-						{error: "MissingMemberId", message: "Member ID is required", details: null},
+						{
+							error: "MissingMemberId",
+							message: "Member ID is required",
+							details: null,
+						},
 						400 as never
 					);
 					return;
@@ -74,7 +85,11 @@ export default (route: Router): void => {
 
 				if (updated.length === 0) {
 					res.fail(
-						{error: "MemberNotFound", message: "Member not found", details: null},
+						{
+							error: "MemberNotFound",
+							message: "Member not found",
+							details: null,
+						},
 						404 as never
 					);
 					return;
@@ -84,6 +99,6 @@ export default (route: Router): void => {
 			} catch (error) {
 				next(error);
 			}
-		},
+		}
 	);
 };

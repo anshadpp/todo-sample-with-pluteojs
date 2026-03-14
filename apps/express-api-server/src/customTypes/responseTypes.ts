@@ -43,7 +43,10 @@ export interface iGenericAPIResponse<T> {
  * Helper function to create typed response errors.
  */
 export function asTypeIResponseError<
-	T extends Record<string, Record<string, {error: string; message: string; details: null}>>,
+	T extends Record<
+		string,
+		Record<string, {error: string; message: string; details: null}>
+	>,
 >(errors: T): T {
 	return errors;
 }

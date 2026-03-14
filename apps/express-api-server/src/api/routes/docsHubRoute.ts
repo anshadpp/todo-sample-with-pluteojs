@@ -53,11 +53,15 @@ function generateVersionCard(version: iApiVersionDoc): string {
 				">API ${version.version}</h2>
 				${getStatusBadge(version.status)}
 			</div>
-			${version.description ? `<p style="
+			${
+	version.description
+		? `<p style="
 				margin: 0 0 20px 0;
 				color: #6b7280;
 				font-size: 14px;
-			">${version.description}</p>` : ""}
+			">${version.description}</p>`
+		: ""
+}
 			<div style="
 				display: flex;
 				gap: 12px;

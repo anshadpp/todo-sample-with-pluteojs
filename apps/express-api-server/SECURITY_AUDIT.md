@@ -8,12 +8,12 @@
 
 ## Summary
 
-| Severity | Issues |
-|----------|--------|
+| Severity | Issues     |
+| -------- | ---------- |
 | Critical | #1, #2, #3 |
-| High | #4, #5, #6 |
-| Medium | #7, #8, #9 |
-| Low | #10, #11 |
+| High     | #4, #5, #6 |
+| Medium   | #7, #8, #9 |
+| Low      | #10, #11   |
 
 ---
 
@@ -23,17 +23,20 @@
 **Status:** [ ] Not Fixed
 
 **Location:**
+
 - `apps/express-api-server/src/loaders/expressLoader.ts`
 
 **Description:**
 No rate limiting middleware is implemented anywhere in the application. All endpoints are vulnerable to abuse.
 
 **Vulnerable Endpoints:**
+
 - `/api/v1/verification/request-email-verification` - Can be abused to flood emails
 - `/api/auth/*` - Vulnerable to brute-force credential attacks
 - All other endpoints - DoS vulnerability
 
 **Impact:**
+
 - Brute-force attacks on authentication
 - OTP/email flooding attacks
 - Resource exhaustion (DoS)
@@ -47,11 +50,13 @@ pnpm add express-rate-limit
 ```
 
 Suggested configuration:
+
 - General API: 100 requests per 15 minutes per IP
 - Auth endpoints: 5-10 requests per 15 minutes per IP
 - Email verification: 3 requests per hour per email
 
 **References:**
+
 - https://www.npmjs.com/package/express-rate-limit
 - OWASP API Security Top 10 - API4:2023 Unrestricted Resource Consumption
 
@@ -63,9 +68,11 @@ Suggested configuration:
 **Status:** [ ] Not Fixed
 
 **Location:**
+
 - `apps/express-api-server/src/loaders/expressLoader.ts:211`
 
 **Current Code:**
+
 ```typescript
 app.use(cors());
 ```
@@ -74,6 +81,7 @@ app.use(cors());
 CORS is configured without any restrictions, allowing any website to make requests to the API. This is dangerous for APIs that use cookies or session-based authentication.
 
 **Impact:**
+
 - Cross-site request forgery potential
 - Data exfiltration from authenticated sessions
 - Malicious sites can interact with authenticated user sessions
@@ -82,15 +90,20 @@ CORS is configured without any restrictions, allowing any website to make reques
 Configure CORS with explicit allowed origins:
 
 ```typescript
-app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+app.use(
+	cors({
+		origin: process.env.ALLOWED_ORIGINS?.split(",") || [
+			"http://localhost:3000",
+		],
+		credentials: true,
+		methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+		allowedHeaders: ["Content-Type", "Authorization"],
+	})
+);
 ```
 
 **References:**
+
 - https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
 - OWASP - CORS Misconfiguration
 
@@ -102,9 +115,11 @@ app.use(cors({
 **Status:** [ ] Not Fixed
 
 **Location:**
+
 - `apps/express-api-server/src/services/VerificationService.ts:44`
 
 **Current Code:**
+
 ```typescript
 logger.silly("Generated OTP: %s", otp);
 ```
@@ -113,6 +128,7 @@ logger.silly("Generated OTP: %s", otp);
 The email verification OTP is logged in plain text. Log files could be accessed by developers, operations staff, or attackers who gain log access.
 
 **Impact:**
+
 - OTPs can be extracted from logs to bypass email verification
 - Compliance violations (logging sensitive authentication data)
 - Insider threat risk
@@ -121,10 +137,11 @@ The email verification OTP is logged in plain text. Log files could be accessed 
 Remove OTP logging entirely or log only metadata:
 
 ```typescript
-logger.silly("OTP generated for email verification", { email: maskedEmail });
+logger.silly("OTP generated for email verification", {email: maskedEmail});
 ```
 
 **References:**
+
 - OWASP - Logging Sensitive Information
 
 ---
@@ -135,12 +152,14 @@ logger.silly("OTP generated for email verification", { email: maskedEmail });
 **Status:** [ ] Not Fixed
 
 **Location:**
+
 - `apps/express-api-server/src/loaders/expressLoader.ts`
 
 **Description:**
 No CSRF (Cross-Site Request Forgery) protection middleware is implemented. While `sameSite: lax` cookies provide some protection, explicit CSRF tokens are recommended for state-changing operations.
 
 **Impact:**
+
 - Attackers can trick authenticated users into performing unwanted actions
 - Account modifications, data changes without user consent
 
@@ -154,6 +173,7 @@ Option C: Implement custom CSRF token validation
 Note: If using only Bearer token authentication (no cookies), CSRF is less of a concern. Clarify the auth strategy being used.
 
 **References:**
+
 - https://owasp.org/www-community/attacks/csrf
 - https://www.npmjs.com/package/csrf-csrf
 
@@ -165,9 +185,11 @@ Note: If using only Bearer token authentication (no cookies), CSRF is less of a 
 **Status:** [ ] Not Fixed
 
 **Location:**
+
 - `packages/api-types/src/common.ts:17`
 
 **Current Code:**
+
 ```typescript
 export const passwordSchema = z.string().min(1, "Password is required");
 ```
@@ -176,6 +198,7 @@ export const passwordSchema = z.string().min(1, "Password is required");
 The password schema only requires 1 character minimum, while better-auth is configured with `minPasswordLength: 8`. This inconsistency could allow weak passwords through direct API calls or confuse developers.
 
 **Impact:**
+
 - Inconsistent validation between API types and auth library
 - Potential for weak passwords if schema is used elsewhere
 - Developer confusion
@@ -185,14 +208,15 @@ Update the schema to match better-auth configuration:
 
 ```typescript
 export const passwordSchema = z
-  .string()
-  .min(8, "Password must be at least 8 characters")
-  .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-  .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-  .regex(/[0-9]/, "Password must contain at least one number");
+	.string()
+	.min(8, "Password must be at least 8 characters")
+	.regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+	.regex(/[a-z]/, "Password must contain at least one lowercase letter")
+	.regex(/[0-9]/, "Password must contain at least one number");
 ```
 
 **References:**
+
 - NIST Digital Identity Guidelines (SP 800-63B)
 
 ---
@@ -203,9 +227,11 @@ export const passwordSchema = z
 **Status:** [ ] Not Fixed
 
 **Location:**
+
 - `apps/express-api-server/src/loaders/expressLoader.ts:205`
 
 **Current Code:**
+
 ```typescript
 app.enable("trust proxy");
 ```
@@ -214,6 +240,7 @@ app.enable("trust proxy");
 `trust proxy` is enabled in all environments without configuration. This tells Express to trust `X-Forwarded-*` headers, which can be spoofed if the server is not behind a trusted proxy.
 
 **Impact:**
+
 - IP address spoofing via `X-Forwarded-For` header
 - Rate limiting bypass (if based on IP)
 - Incorrect logging of client IPs
@@ -224,15 +251,16 @@ Configure based on deployment environment:
 
 ```typescript
 // Only trust proxy in production behind load balancer
-if (process.env.NODE_ENV === 'production') {
-  // Trust first proxy (adjust based on your infrastructure)
-  app.set('trust proxy', 1);
+if (process.env.NODE_ENV === "production") {
+	// Trust first proxy (adjust based on your infrastructure)
+	app.set("trust proxy", 1);
 } else {
-  app.set('trust proxy', false);
+	app.set("trust proxy", false);
 }
 ```
 
 **References:**
+
 - https://expressjs.com/en/guide/behind-proxies.html
 - Express.js Security Best Practices
 
@@ -244,9 +272,11 @@ if (process.env.NODE_ENV === 'production') {
 **Status:** [ ] Not Fixed
 
 **Location:**
+
 - `packages/better-auth/src/config/envSchema.ts:14-17`
 
 **Current Code:**
+
 ```typescript
 BETTER_AUTH_COOKIE_SECURE: z
   .enum(["true", "false"])
@@ -258,6 +288,7 @@ BETTER_AUTH_COOKIE_SECURE: z
 The secure flag for authentication cookies defaults to `false`. If not explicitly set in production, session cookies will be transmitted over HTTP, making them vulnerable to interception.
 
 **Impact:**
+
 - Session hijacking via network sniffing
 - Man-in-the-middle attacks
 - Cookie theft on insecure networks
@@ -275,6 +306,7 @@ BETTER_AUTH_COOKIE_SECURE: z
 Or require explicit configuration without a default in production.
 
 **References:**
+
 - OWASP - Secure Cookie Attribute
 
 ---
@@ -285,13 +317,15 @@ Or require explicit configuration without a default in production.
 **Status:** [ ] Not Fixed
 
 **Location:**
+
 - `apps/express-api-server/src/api/routes/v1/authRoute.ts:145-148`
 
 **Current Code:**
+
 ```typescript
 res.setHeader(
-  "Content-Security-Policy",
-  "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; ..."
+	"Content-Security-Policy",
+	"default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; ..."
 );
 ```
 
@@ -299,16 +333,19 @@ res.setHeader(
 The Content Security Policy for the OpenAPI reference endpoint allows `'unsafe-inline'` scripts, which weakens XSS protection on that page.
 
 **Impact:**
+
 - Potential XSS vulnerabilities on the API documentation page
 - Reduced effectiveness of CSP
 
 **Recommendation:**
 If possible, use nonces or hashes instead of `'unsafe-inline'`. If the Scalar library requires inline scripts, consider:
+
 1. Serving OpenAPI docs from a separate subdomain
 2. Restricting access to development environments only
 3. Using strict-dynamic with nonces if Scalar supports it
 
 **References:**
+
 - https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
 - Content Security Policy Level 3
 
@@ -320,15 +357,17 @@ If possible, use nonces or hashes instead of `'unsafe-inline'`. If the Scalar li
 **Status:** [ ] Not Fixed
 
 **Location:**
+
 - `packages/better-auth/src/auth.ts:21-26`
 
 **Current Code:**
+
 ```typescript
 const getPlugins = () => {
-  if (process.env.NODE_ENV === "production") {
-    return [...corePlugins];
-  }
-  return [...corePlugins, ...devPlugins];
+	if (process.env.NODE_ENV === "production") {
+		return [...corePlugins];
+	}
+	return [...corePlugins, ...devPlugins];
 };
 ```
 
@@ -336,6 +375,7 @@ const getPlugins = () => {
 The OpenAPI plugin (in devPlugins) is enabled in all non-production environments, including staging. This exposes API documentation that could help attackers understand the API structure.
 
 **Impact:**
+
 - API structure exposed in staging environments
 - Potential information disclosure
 
@@ -344,16 +384,18 @@ Restrict dev plugins to local development only:
 
 ```typescript
 const getPlugins = () => {
-  const isDevelopment = process.env.NODE_ENV === 'development' ||
-                        process.env.NODE_ENV === 'development_local';
-  if (isDevelopment) {
-    return [...corePlugins, ...devPlugins];
-  }
-  return [...corePlugins];
+	const isDevelopment =
+		process.env.NODE_ENV === "development" ||
+		process.env.NODE_ENV === "development_local";
+	if (isDevelopment) {
+		return [...corePlugins, ...devPlugins];
+	}
+	return [...corePlugins];
 };
 ```
 
 **References:**
+
 - OWASP - Information Disclosure
 
 ---
@@ -364,9 +406,11 @@ const getPlugins = () => {
 **Status:** [ ] Not Fixed
 
 **Location:**
+
 - `apps/express-api-server/src/loaders/expressLoader.ts:220`
 
 **Current Code:**
+
 ```typescript
 app.use(express.json());
 ```
@@ -375,6 +419,7 @@ app.use(express.json());
 No explicit body size limit is set for JSON parsing. The default is 100kb, but explicitly setting a limit is a best practice.
 
 **Impact:**
+
 - Potential for large payload attacks
 - Memory exhaustion with very large requests
 
@@ -382,11 +427,12 @@ No explicit body size limit is set for JSON parsing. The default is 100kb, but e
 Set explicit body size limits:
 
 ```typescript
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(express.json({limit: "10kb"}));
+app.use(express.urlencoded({extended: true, limit: "10kb"}));
 ```
 
 **References:**
+
 - Express.js Security Best Practices
 
 ---
@@ -397,9 +443,11 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 **Status:** [ ] Not Fixed
 
 **Location:**
+
 - `apps/express-api-server/src/loaders/expressLoader.ts:208`
 
 **Current Code:**
+
 ```typescript
 app.use(helmet());
 ```
@@ -411,28 +459,31 @@ Helmet is used with default configuration. Consider adding additional security h
 Configure Helmet with stricter policies:
 
 ```typescript
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'"],
-      fontSrc: ["'self'"],
-      objectSrc: ["'none'"],
-      frameAncestors: ["'none'"],
-    },
-  },
-  hsts: {
-    maxAge: 31536000,
-    includeSubDomains: true,
-    preload: true,
-  },
-}));
+app.use(
+	helmet({
+		contentSecurityPolicy: {
+			directives: {
+				defaultSrc: ["'self'"],
+				scriptSrc: ["'self'"],
+				styleSrc: ["'self'", "'unsafe-inline'"],
+				imgSrc: ["'self'", "data:", "https:"],
+				connectSrc: ["'self'"],
+				fontSrc: ["'self'"],
+				objectSrc: ["'none'"],
+				frameAncestors: ["'none'"],
+			},
+		},
+		hsts: {
+			maxAge: 31536000,
+			includeSubDomains: true,
+			preload: true,
+		},
+	})
+);
 ```
 
 **References:**
+
 - https://helmetjs.github.io/
 
 ---
@@ -467,6 +518,6 @@ The following security practices are already well-implemented:
 
 ## Revision History
 
-| Date | Version | Changes |
-|------|---------|---------|
-| 2026-01-22 | 1.0 | Initial security audit |
+| Date       | Version | Changes                |
+| ---------- | ------- | ---------------------- |
+| 2026-01-22 | 1.0     | Initial security audit |

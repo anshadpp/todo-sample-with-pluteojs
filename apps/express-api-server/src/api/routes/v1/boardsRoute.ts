@@ -29,7 +29,12 @@ registry.registerPath({
 	tags: ["Boards"],
 	security: [{bearerAuth: []}],
 	responses: {
-		200: {description: "Boards retrieved", content: {"application/json": {schema: SuccessEnvelope(boardListResponseSchema)}}},
+		200: {
+			description: "Boards retrieved",
+			content: {
+				"application/json": {schema: SuccessEnvelope(boardListResponseSchema)},
+			},
+		},
 	},
 });
 
@@ -39,9 +44,16 @@ registry.registerPath({
 	summary: "Create a board",
 	tags: ["Boards"],
 	security: [{bearerAuth: []}],
-	request: {body: {content: {"application/json": {schema: createBoardBodySchema}}}},
+	request: {
+		body: {content: {"application/json": {schema: createBoardBodySchema}}},
+	},
 	responses: {
-		201: {description: "Board created", content: {"application/json": {schema: SuccessEnvelope(boardResponseSchema)}}},
+		201: {
+			description: "Board created",
+			content: {
+				"application/json": {schema: SuccessEnvelope(boardResponseSchema)},
+			},
+		},
 	},
 });
 
@@ -52,8 +64,16 @@ registry.registerPath({
 	tags: ["Boards"],
 	security: [{bearerAuth: []}],
 	responses: {
-		200: {description: "Board retrieved", content: {"application/json": {schema: SuccessEnvelope(boardResponseSchema)}}},
-		404: {description: "Not found", content: {"application/json": {schema: ErrorEnvelope}}},
+		200: {
+			description: "Board retrieved",
+			content: {
+				"application/json": {schema: SuccessEnvelope(boardResponseSchema)},
+			},
+		},
+		404: {
+			description: "Not found",
+			content: {"application/json": {schema: ErrorEnvelope}},
+		},
 	},
 });
 
@@ -63,10 +83,20 @@ registry.registerPath({
 	summary: "Update a board",
 	tags: ["Boards"],
 	security: [{bearerAuth: []}],
-	request: {body: {content: {"application/json": {schema: updateBoardBodySchema}}}},
+	request: {
+		body: {content: {"application/json": {schema: updateBoardBodySchema}}},
+	},
 	responses: {
-		200: {description: "Board updated", content: {"application/json": {schema: SuccessEnvelope(boardResponseSchema)}}},
-		404: {description: "Not found", content: {"application/json": {schema: ErrorEnvelope}}},
+		200: {
+			description: "Board updated",
+			content: {
+				"application/json": {schema: SuccessEnvelope(boardResponseSchema)},
+			},
+		},
+		404: {
+			description: "Not found",
+			content: {"application/json": {schema: ErrorEnvelope}},
+		},
 	},
 });
 
@@ -78,7 +108,10 @@ registry.registerPath({
 	security: [{bearerAuth: []}],
 	responses: {
 		200: {description: "Board deleted"},
-		404: {description: "Not found", content: {"application/json": {schema: ErrorEnvelope}}},
+		404: {
+			description: "Not found",
+			content: {"application/json": {schema: ErrorEnvelope}},
+		},
 	},
 });
 
@@ -89,7 +122,14 @@ registry.registerPath({
 	tags: ["Categories"],
 	security: [{bearerAuth: []}],
 	responses: {
-		200: {description: "Categories retrieved", content: {"application/json": {schema: SuccessEnvelope(categoryListResponseSchema)}}},
+		200: {
+			description: "Categories retrieved",
+			content: {
+				"application/json": {
+					schema: SuccessEnvelope(categoryListResponseSchema),
+				},
+			},
+		},
 	},
 });
 
@@ -99,9 +139,16 @@ registry.registerPath({
 	summary: "Create a category",
 	tags: ["Categories"],
 	security: [{bearerAuth: []}],
-	request: {body: {content: {"application/json": {schema: createCategoryBodySchema}}}},
+	request: {
+		body: {content: {"application/json": {schema: createCategoryBodySchema}}},
+	},
 	responses: {
-		201: {description: "Category created", content: {"application/json": {schema: SuccessEnvelope(categoryResponseSchema)}}},
+		201: {
+			description: "Category created",
+			content: {
+				"application/json": {schema: SuccessEnvelope(categoryResponseSchema)},
+			},
+		},
 	},
 });
 
@@ -111,10 +158,20 @@ registry.registerPath({
 	summary: "Update a category",
 	tags: ["Categories"],
 	security: [{bearerAuth: []}],
-	request: {body: {content: {"application/json": {schema: updateCategoryBodySchema}}}},
+	request: {
+		body: {content: {"application/json": {schema: updateCategoryBodySchema}}},
+	},
 	responses: {
-		200: {description: "Category updated", content: {"application/json": {schema: SuccessEnvelope(categoryResponseSchema)}}},
-		404: {description: "Not found", content: {"application/json": {schema: ErrorEnvelope}}},
+		200: {
+			description: "Category updated",
+			content: {
+				"application/json": {schema: SuccessEnvelope(categoryResponseSchema)},
+			},
+		},
+		404: {
+			description: "Not found",
+			content: {"application/json": {schema: ErrorEnvelope}},
+		},
 	},
 });
 
@@ -126,7 +183,10 @@ registry.registerPath({
 	security: [{bearerAuth: []}],
 	responses: {
 		200: {description: "Category deleted"},
-		404: {description: "Not found", content: {"application/json": {schema: ErrorEnvelope}}},
+		404: {
+			description: "Not found",
+			content: {"application/json": {schema: ErrorEnvelope}},
+		},
 	},
 });
 
@@ -136,9 +196,20 @@ registry.registerPath({
 	summary: "Reorder categories",
 	tags: ["Categories"],
 	security: [{bearerAuth: []}],
-	request: {body: {content: {"application/json": {schema: reorderCategoriesBodySchema}}}},
+	request: {
+		body: {
+			content: {"application/json": {schema: reorderCategoriesBodySchema}},
+		},
+	},
 	responses: {
-		200: {description: "Categories reordered", content: {"application/json": {schema: SuccessEnvelope(categoryListResponseSchema)}}},
+		200: {
+			description: "Categories reordered",
+			content: {
+				"application/json": {
+					schema: SuccessEnvelope(categoryListResponseSchema),
+				},
+			},
+		},
 	},
 });
 
@@ -153,8 +224,10 @@ export default (route: Router): void => {
 			try {
 				const data = await boardsService.getBoards(req.params.projectId!);
 				res.ok(data);
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.post(
@@ -165,10 +238,15 @@ export default (route: Router): void => {
 			const uniqueRequestId = expressUtil.parseUniqueRequestId(req);
 			logger.debug(uniqueRequestId, "Create board request received");
 			try {
-				const data = await boardsService.createBoard(req.params.projectId!, req.body);
+				const data = await boardsService.createBoard(
+					req.params.projectId!,
+					req.body
+				);
 				res.ok(data, 201);
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.get(
@@ -181,8 +259,10 @@ export default (route: Router): void => {
 				const board = await boardsService.getBoard(req.params.boardId!);
 				const cats = await boardsService.getCategories(req.params.boardId!);
 				res.ok({...board, categories: cats});
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.patch(
@@ -193,10 +273,15 @@ export default (route: Router): void => {
 			const uniqueRequestId = expressUtil.parseUniqueRequestId(req);
 			logger.debug(uniqueRequestId, "Update board request received");
 			try {
-				const data = await boardsService.updateBoard(req.params.boardId!, req.body);
+				const data = await boardsService.updateBoard(
+					req.params.boardId!,
+					req.body
+				);
 				res.ok(data);
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.delete(
@@ -208,8 +293,10 @@ export default (route: Router): void => {
 			try {
 				await boardsService.deleteBoard(req.params.boardId!);
 				res.ok({message: "Board deleted successfully"});
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	// Category routes
@@ -222,8 +309,10 @@ export default (route: Router): void => {
 			try {
 				const data = await boardsService.getCategories(req.params.boardId!);
 				res.ok(data);
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.post(
@@ -234,10 +323,15 @@ export default (route: Router): void => {
 			const uniqueRequestId = expressUtil.parseUniqueRequestId(req);
 			logger.debug(uniqueRequestId, "Create category request received");
 			try {
-				const data = await boardsService.createCategory(req.params.boardId!, req.body);
+				const data = await boardsService.createCategory(
+					req.params.boardId!,
+					req.body
+				);
 				res.ok(data, 201);
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.patch(
@@ -248,10 +342,15 @@ export default (route: Router): void => {
 			const uniqueRequestId = expressUtil.parseUniqueRequestId(req);
 			logger.debug(uniqueRequestId, "Reorder categories request received");
 			try {
-				const data = await boardsService.reorderCategories(req.params.boardId!, req.body.categories);
+				const data = await boardsService.reorderCategories(
+					req.params.boardId!,
+					req.body.categories
+				);
 				res.ok(data);
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.patch(
@@ -262,10 +361,15 @@ export default (route: Router): void => {
 			const uniqueRequestId = expressUtil.parseUniqueRequestId(req);
 			logger.debug(uniqueRequestId, "Update category request received");
 			try {
-				const data = await boardsService.updateCategory(req.params.categoryId!, req.body);
+				const data = await boardsService.updateCategory(
+					req.params.categoryId!,
+					req.body
+				);
 				res.ok(data);
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 
 	route.delete(
@@ -277,7 +381,9 @@ export default (route: Router): void => {
 			try {
 				await boardsService.deleteCategory(req.params.categoryId!);
 				res.ok({message: "Category deleted successfully"});
-			} catch (error) { next(error); }
-		},
+			} catch (error) {
+				next(error);
+			}
+		}
 	);
 };

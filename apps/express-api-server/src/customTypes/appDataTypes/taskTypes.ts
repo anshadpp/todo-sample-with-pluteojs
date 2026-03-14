@@ -127,8 +127,61 @@ export interface iTaskDependency {
 	dependsOnTaskId: string;
 	dependencyType: string;
 	createdAt: string;
-	dependsOnTask?: {id: string; title: string; status: string; categoryId: string | null};
-	dependentTask?: {id: string; title: string; status: string; categoryId: string | null};
+	dependsOnTask?: {
+		id: string;
+		title: string;
+		status: string;
+		categoryId: string | null;
+	};
+	dependentTask?: {
+		id: string;
+		title: string;
+		status: string;
+		categoryId: string | null;
+	};
+}
+
+export interface iAutoSortRule {
+	id: string;
+	projectId: string;
+	name: string;
+	description: string | null;
+	conditionField: string;
+	conditionOperator: string;
+	conditionValue: string | null;
+	actionType: string;
+	actionValue: string;
+	isEnabled: boolean;
+	sortOrder: number;
+	stopOnMatch: boolean;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface iCreateAutoSortRuleDTO {
+	name: string;
+	description?: string;
+	conditionField: string;
+	conditionOperator: string;
+	conditionValue?: string;
+	actionType: string;
+	actionValue: string;
+	isEnabled?: boolean;
+	sortOrder?: number;
+	stopOnMatch?: boolean;
+}
+
+export interface iUpdateAutoSortRuleDTO {
+	name?: string;
+	description?: string | null;
+	conditionField?: string;
+	conditionOperator?: string;
+	conditionValue?: string | null;
+	actionType?: string;
+	actionValue?: string;
+	isEnabled?: boolean;
+	sortOrder?: number;
+	stopOnMatch?: boolean;
 }
 
 export interface iTaskContent {

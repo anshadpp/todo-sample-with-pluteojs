@@ -3,7 +3,11 @@ import {db, eq, and, labels, taskLabels} from "@pluteojs/database";
 import logger from "@loaders/logger";
 
 import {httpStatusCodes} from "@customTypes/networkTypes";
-import type {iLabel, iCreateLabelDTO, iUpdateLabelDTO} from "@customTypes/appDataTypes/taskTypes";
+import type {
+	iLabel,
+	iCreateLabelDTO,
+	iUpdateLabelDTO,
+} from "@customTypes/appDataTypes/taskTypes";
 
 import {ServiceError} from "@errors/ServiceError";
 import {taskServiceError} from "@constants/errors/taskServiceErrors";
@@ -28,10 +32,15 @@ export default class LabelsService {
 			.where(eq(labels.projectId, projectId))
 			.orderBy(labels.name);
 
-		return records.map((r) => {return this.toDTO(r);});
+		return records.map((r) => {
+			return this.toDTO(r);
+		});
 	}
 
-	public async createLabel(projectId: string, input: iCreateLabelDTO): Promise<iLabel> {
+	public async createLabel(
+		projectId: string,
+		input: iCreateLabelDTO
+	): Promise<iLabel> {
 		logger.silly("Creating a new label");
 
 		const result = await db
@@ -48,12 +57,19 @@ export default class LabelsService {
 		return this.toDTO(label);
 	}
 
-	public async updateLabel(labelId: string, input: iUpdateLabelDTO): Promise<iLabel> {
+	public async updateLabel(
+		labelId: string,
+		input: iUpdateLabelDTO
+	): Promise<iLabel> {
 		logger.silly("Updating label");
 
 		const updateValues: Record<string, unknown> = {};
-		if (input.name !== undefined) {updateValues.name = input.name;}
-		if (input.color !== undefined) {updateValues.color = input.color;}
+		if (input.name !== undefined) {
+			updateValues.name = input.name;
+		}
+		if (input.color !== undefined) {
+			updateValues.color = input.color;
+		}
 
 		const result = await db
 			.update(labels)
@@ -65,7 +81,7 @@ export default class LabelsService {
 		if (!record) {
 			throw new ServiceError(
 				httpStatusCodes.CLIENT_ERROR_NOT_FOUND,
-				taskServiceError.getLabel.LabelNotFound,
+				taskServiceError.getLabel.LabelNotFound
 			);
 		}
 
@@ -84,7 +100,7 @@ export default class LabelsService {
 		if (result.length === 0) {
 			throw new ServiceError(
 				httpStatusCodes.CLIENT_ERROR_NOT_FOUND,
-				taskServiceError.getLabel.LabelNotFound,
+				taskServiceError.getLabel.LabelNotFound
 			);
 		}
 
@@ -94,20 +110,22 @@ export default class LabelsService {
 	public async addLabelToTask(taskId: string, labelId: string): Promise<void> {
 		logger.silly("Adding label to task");
 
-		await db
-			.insert(taskLabels)
-			.values({taskId, labelId})
-			.onConflictDoNothing();
+		await db.insert(taskLabels).values({taskId, labelId}).onConflictDoNothing();
 
 		logger.silly("Label added to task successfully");
 	}
 
-	public async removeLabelFromTask(taskId: string, labelId: string): Promise<void> {
+	public async removeLabelFromTask(
+		taskId: string,
+		labelId: string
+	): Promise<void> {
 		logger.silly("Removing label from task");
 
 		await db
 			.delete(taskLabels)
-			.where(and(eq(taskLabels.taskId, taskId), eq(taskLabels.labelId, labelId)));
+			.where(
+				and(eq(taskLabels.taskId, taskId), eq(taskLabels.labelId, labelId))
+			);
 
 		logger.silly("Label removed from task successfully");
 	}

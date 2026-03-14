@@ -8,7 +8,9 @@ import config from "@config";
  *
  * @returns The OpenAPI document object
  */
-export function generateOpenApiDocument(): ReturnType<OpenApiGeneratorV31["generateDocument"]> {
+export function generateOpenApiDocument(): ReturnType<
+	OpenApiGeneratorV31["generateDocument"]
+	> {
 	const generator = new OpenApiGeneratorV31(registry.definitions);
 
 	return generator.generateDocument({

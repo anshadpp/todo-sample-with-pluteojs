@@ -19,9 +19,11 @@ export const ErrorSchema = z.object({
 /**
  * Metadata schema included in all responses.
  */
-export const MetaSchema = z.object({
-	URID: z.string().optional().openapi({description: "Unique Request ID"}),
-}).catchall(z.unknown());
+export const MetaSchema = z
+	.object({
+		URID: z.string().optional().openapi({description: "Unique Request ID"}),
+	})
+	.catchall(z.unknown());
 
 /**
  * Creates a success response envelope schema wrapping the provided data schema.
@@ -29,7 +31,9 @@ export const MetaSchema = z.object({
  * @param data - The Zod schema for the response data
  * @returns A Zod schema for the success envelope
  */
-export const SuccessEnvelope = <T extends z.ZodTypeAny>(data: T): z.ZodObject<{
+export const SuccessEnvelope = <T extends z.ZodTypeAny>(
+	data: T
+): z.ZodObject<{
 	isSuccess: z.ZodLiteral<true>;
 	httpStatusCode: z.ZodNumber;
 	meta: typeof MetaSchema;
@@ -38,7 +42,9 @@ export const SuccessEnvelope = <T extends z.ZodTypeAny>(data: T): z.ZodObject<{
 }> => {
 	return z.object({
 		isSuccess: z.literal(true),
-		httpStatusCode: z.number().openapi({description: "HTTP status code", example: 200}),
+		httpStatusCode: z
+			.number()
+			.openapi({description: "HTTP status code", example: 200}),
 		meta: MetaSchema,
 		error: z.null(),
 		data,
@@ -50,7 +56,9 @@ export const SuccessEnvelope = <T extends z.ZodTypeAny>(data: T): z.ZodObject<{
  */
 export const ErrorEnvelope = z.object({
 	isSuccess: z.literal(false),
-	httpStatusCode: z.number().openapi({description: "HTTP status code", example: 400}),
+	httpStatusCode: z
+		.number()
+		.openapi({description: "HTTP status code", example: 400}),
 	meta: MetaSchema,
 	error: ErrorSchema,
 	data: z.unknown().nullable(),
