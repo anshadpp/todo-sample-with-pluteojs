@@ -15,6 +15,20 @@
       "when": 1741785600000,
       "tag": "0001_board_types",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1741872000000,
+      "tag": "0002_auto_sort_rules",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1741958400000,
+      "tag": "0003_backfill_status_values",
+      "breakpoints": true
     }
   ]
 }
