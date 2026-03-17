@@ -1,7 +1,5 @@
 import {AxiosError, AxiosInstance, AxiosResponse} from "axios";
 
-import type {StoreType} from "@/store/index";
-
 import {httpStatusCodes} from "@/customTypes/NetworkTypes";
 
 /**
@@ -11,11 +9,11 @@ import {httpStatusCodes} from "@/customTypes/NetworkTypes";
  * Defined responseInterceptor closures needs to be registered to the constant object
  * axiosResponseInterceptors in order to get mapped.
  *
- * @param store
+ * @param _store
  * @param apiServer
  */
 function PluteoJSServerAxiosResponseInterceptors(
-	store: StoreType | null,
+	_store: unknown = null,
 	apiServer: AxiosInstance
 ): void {
 	/*
@@ -34,7 +32,7 @@ function PluteoJSServerAxiosResponseInterceptors(
 		},
 
 		onRejected: async (reason: AxiosError): Promise<unknown> => {
-			if (store && reason && reason.response) {
+			if (reason && reason.response) {
 				const {status: errorHttpStatus} = reason.response;
 
 				/*

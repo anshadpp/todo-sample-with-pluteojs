@@ -3,7 +3,7 @@
 import {useEffect, useState} from "react";
 import {useParams, useRouter} from "next/navigation";
 import {Button} from "@/components/lib/shadcn/ui/button";
-import {organizationService, authService} from "@/services/api/PluteoJS";
+import {useAuthStore, useOrganizationStore} from "@/store";
 
 interface InvitationData {
 	id: string;
@@ -21,6 +21,10 @@ export default function AcceptInvitationPage() {
 	const router = useRouter();
 	const invitationId = params.invitationId as string;
 
+	const getSession = useAuthStore((s) => s.getSession);
+	const acceptInvitation = useOrganizationStore((s) => s.acceptInvitation);
+	const rejectInvitation = useOrganizationStore((s) => s.rejectInvitation);
+
 	const [invitation, setInvitation] = useState<InvitationData | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [processing, setProcessing] = useState(false);
@@ -30,16 +34,17 @@ export default function AcceptInvitationPage() {
 
 	useEffect(() => {
 		(async () => {
-			// Check if user is logged in
-			const sessionResult = await authService.getSession();
-			if (sessionResult.error || !sessionResult.data) {
-				// Not logged in — redirect to login with return URL
+			// Check if user is logged in via store
+			await getSession();
+			const authState = useAuthStore.getState();
+			if (!authState.isAuthenticated) {
 				router.push(`/login?redirect=/accept-invitation/${invitationId}`);
 				return;
 			}
 			setIsLoggedIn(true);
 
-			// Fetch invitation details
+			// Fetch invitation details (still direct since it's a one-off read)
+			const {organizationService} = await import("@/services/api/PluteoJS");
 			const result = await organizationService.getInvitation(invitationId);
 			if (!result.error && result.data) {
 				setInvitation(result.data as unknown as InvitationData);
@@ -54,18 +59,19 @@ export default function AcceptInvitationPage() {
 			}
 			setLoading(false);
 		})();
-	}, [invitationId, router]);
+	}, [invitationId, router, getSession]);
 
 	const handleAccept = async () => {
 		setProcessing(true);
 		setError("");
-		const result = await organizationService.acceptInvitation(invitationId);
-		if (!result.error) {
+		await acceptInvitation(invitationId);
+		const state = useOrganizationStore.getState();
+		if (state.acceptInvitationStatus.responseStatus === "SUCCESS") {
 			setSuccess("Invitation accepted! Redirecting to dashboard...");
 			setTimeout(() => router.push("/dashboard"), 1500);
 		} else {
 			setError(
-				String(result.message || result.error || "Failed to accept invitation.")
+				state.acceptInvitationStatus.message || "Failed to accept invitation."
 			);
 		}
 		setProcessing(false);
@@ -74,15 +80,14 @@ export default function AcceptInvitationPage() {
 	const handleReject = async () => {
 		setProcessing(true);
 		setError("");
-		const result = await organizationService.rejectInvitation(invitationId);
-		if (!result.error) {
+		await rejectInvitation(invitationId);
+		const state = useOrganizationStore.getState();
+		if (state.rejectInvitationStatus.responseStatus === "SUCCESS") {
 			setSuccess("Invitation declined.");
 			setTimeout(() => router.push("/dashboard"), 1500);
 		} else {
 			setError(
-				String(
-					result.message || result.error || "Failed to decline invitation."
-				)
+				state.rejectInvitationStatus.message || "Failed to decline invitation."
 			);
 		}
 		setProcessing(false);

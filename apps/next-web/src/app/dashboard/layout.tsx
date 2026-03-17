@@ -1,16 +1,17 @@
 "use client";
 
-import {useEffect, useState, useCallback, useRef} from "react";
+import {useEffect, useState, useCallback} from "react";
 import {useRouter, usePathname} from "next/navigation";
 import Link from "next/link";
 import {
-	authService,
-	organizationService,
-	projectService,
-	notificationService,
-	memberService,
-	userService,
-} from "@/services/api/PluteoJS";
+	useAuthStore,
+	useOrganizationStore,
+	useProjectsStore,
+	useNotificationsStore,
+	useMembersStore,
+	useUserStore,
+} from "@/store";
+import {organizationService} from "@/services/api/PluteoJS";
 import {Button} from "@/components/lib/shadcn/ui/button";
 import {Avatar, AvatarFallback} from "@/components/lib/shadcn/ui/avatar";
 import {Badge} from "@/components/lib/shadcn/ui/badge";
@@ -64,11 +65,25 @@ export default function DashboardLayout({
 }) {
 	const router = useRouter();
 	const pathname = usePathname();
-	const [user, setUser] = useState<User | null>(null);
-	const [organizations, setOrganizations] = useState<Organization[]>([]);
+
+	// Store state
+	const user = useAuthStore((s) => s.user) as User | null;
+	const getSession = useAuthStore((s) => s.getSession);
+	const signOut = useAuthStore((s) => s.signOut);
+	const organizations = useOrganizationStore(
+		(s) => s.organizations
+	) as unknown as Organization[];
+	const listOrganizations = useOrganizationStore((s) => s.listOrganizations);
+	const projects = useProjectsStore((s) => s.items) as unknown as Project[];
+	const fetchProjectsAction = useProjectsStore((s) => s.fetchProjects);
+	const unreadCount = useNotificationsStore((s) => s.unreadCount);
+	const fetchUnreadCount = useNotificationsStore((s) => s.fetchUnreadCount);
+	const markAllAsRead = useNotificationsStore((s) => s.markAllAsRead);
+	const listMembers = useMembersStore((s) => s.listMembers);
+	const fetchUserProfile = useUserStore((s) => s.fetchUserProfile);
+
+	// Local UI state
 	const [activeOrg, setActiveOrg] = useState<Organization | null>(null);
-	const [projects, setProjects] = useState<Project[]>([]);
-	const [unreadCount, setUnreadCount] = useState(0);
 	const [loading, setLoading] = useState(true);
 	const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 	const [darkMode, setDarkMode] = useState(false);
@@ -85,55 +100,48 @@ export default function DashboardLayout({
 
 	const isPersonalWorkspace = !activeOrg;
 
-	const fetchProjects = useCallback(async (orgId: string | null) => {
-		const projResult = await projectService.getProjects(orgId);
-		if (!projResult.error && projResult.data) {
-			setProjects(projResult.data as unknown as Project[]);
-		} else {
-			setProjects([]);
-		}
-	}, []);
-
 	const fetchData = useCallback(async () => {
-		const sessionResult = await authService.getSession();
-		if (sessionResult.error || !sessionResult.data) {
+		await getSession();
+		const authState = useAuthStore.getState();
+		if (!authState.isAuthenticated) {
 			router.push("/login");
 			return;
 		}
-		const sessionData = sessionResult.data as unknown as {user: User};
-		setUser(sessionData.user);
 
-		const orgResult = await organizationService.listOrganizations();
-		if (!orgResult.error && orgResult.data) {
-			const orgList = orgResult.data as unknown as Organization[];
-			setOrganizations(orgList);
-
-			const savedOrgId = localStorage.getItem("activeOrgId");
-			if (savedOrgId && savedOrgId !== "personal") {
-				const org = orgList.find((o) => o.id === savedOrgId);
-				if (org) {
-					setActiveOrg(org);
-					await fetchProjects(org.id);
-				} else {
-					localStorage.setItem("activeOrgId", "personal");
-					await fetchProjects(null);
-				}
+		await listOrganizations();
+		const orgState = useOrganizationStore.getState();
+		const savedOrgId = localStorage.getItem("activeOrgId");
+		if (savedOrgId && savedOrgId !== "personal") {
+			const found = orgState.organizations.find(
+				(o: Record<string, unknown>) => o.id === savedOrgId
+			) as Organization | undefined;
+			if (found) {
+				setActiveOrg(found);
 			} else {
 				localStorage.setItem("activeOrgId", "personal");
-				await fetchProjects(null);
 			}
 		} else {
 			localStorage.setItem("activeOrgId", "personal");
-			await fetchProjects(null);
 		}
 
-		const notifResult = await notificationService.getUnreadCount();
-		if (!notifResult.error && notifResult.data) {
-			setUnreadCount((notifResult.data as unknown as {count: number}).count);
+		const orgId = savedOrgId && savedOrgId !== "personal" ? savedOrgId : null;
+		await fetchProjectsAction(orgId);
+		await fetchUnreadCount();
+		if (orgId) {
+			await listMembers();
 		}
+		await fetchUserProfile();
 
 		setLoading(false);
-	}, [router, fetchProjects]);
+	}, [
+		router,
+		getSession,
+		listOrganizations,
+		fetchProjectsAction,
+		fetchUnreadCount,
+		listMembers,
+		fetchUserProfile,
+	]);
 
 	useEffect(() => {
 		fetchData();
@@ -156,38 +164,42 @@ export default function DashboardLayout({
 		setActiveOrg(org);
 		if (org) {
 			localStorage.setItem("activeOrgId", org.id);
-			await fetchProjects(org.id);
+			await fetchProjectsAction(org.id);
 		} else {
 			localStorage.setItem("activeOrgId", "personal");
-			await fetchProjects(null);
+			await fetchProjectsAction(null);
 		}
 	};
 
 	const handleSignOut = async () => {
-		await authService.signOut();
+		await signOut();
 		router.push("/login");
 	};
 
-	const handleOrgCreated = async (org: Organization) => {
-		setOrganizations((prev) => [...prev, org]);
-		handleOrgSwitch(org);
+	const handleOrgCreated = async () => {
+		// After store action succeeds, re-read organizations from store
+		const orgState = useOrganizationStore.getState();
+		const latestOrgs = orgState.organizations as unknown as Organization[];
+		const newOrg = latestOrgs[latestOrgs.length - 1];
+		if (newOrg) {
+			handleOrgSwitch(newOrg);
+		}
 		setShowCreateOrg(false);
 	};
 
-	const handleProjectCreated = (project: Project) => {
-		setProjects((prev) => [...prev, project]);
+	const handleProjectCreated = () => {
+		// Store already has the updated items
 		setShowCreateProject(false);
 	};
 
-	const handleProjectUpdated = (project: Project) => {
-		setProjects((prev) => prev.map((p) => (p.id === project.id ? project : p)));
+	const handleProjectUpdated = () => {
+		// Store already has the updated items
 		setEditingProject(null);
 	};
 
 	const handleProjectDeleted = async (projectId: string) => {
 		const activeOrgId = activeOrg?.id || null;
-		await projectService.deleteProject(activeOrgId, projectId);
-		setProjects((prev) => prev.filter((p) => p.id !== projectId));
+		await useProjectsStore.getState().deleteProject(activeOrgId, projectId);
 		setDeletingProject(null);
 		if (pathname.includes(projectId)) {
 			router.push("/dashboard");
@@ -195,18 +207,20 @@ export default function DashboardLayout({
 	};
 
 	const handleOrgUpdated = (org: Organization) => {
-		setOrganizations((prev) => prev.map((o) => (o.id === org.id ? org : o)));
 		if (activeOrg?.id === org.id) setActiveOrg(org);
 		setShowEditOrg(false);
+		// Re-fetch organizations to sync store
+		listOrganizations();
 	};
 
 	const handleOrgDeleted = async () => {
 		if (!activeOrg) return;
-		await organizationService.deleteOrganization(activeOrg.id);
-		setOrganizations((prev) => prev.filter((o) => o.id !== activeOrg.id));
+		await useOrganizationStore.getState().deleteOrganization(activeOrg.id);
 		handleOrgSwitch(null);
 		setShowDeleteOrg(false);
 		router.push("/dashboard");
+		// Re-fetch organizations to sync store
+		listOrganizations();
 	};
 
 	if (loading) {
@@ -473,8 +487,7 @@ export default function DashboardLayout({
 						<NotificationDropdown
 							unreadCount={unreadCount}
 							onMarkAllRead={async () => {
-								await notificationService.markAllAsRead();
-								setUnreadCount(0);
+								await markAllAsRead();
 							}}
 						/>
 
@@ -578,8 +591,7 @@ export default function DashboardLayout({
 				<ProfileModal
 					user={user}
 					onClose={() => setShowProfile(false)}
-					onUpdated={(updatedUser) => {
-						setUser(updatedUser);
+					onUpdated={() => {
 						setShowProfile(false);
 					}}
 				/>
@@ -597,8 +609,9 @@ function CreateOrganizationModal({
 	onCreated,
 }: {
 	onClose: () => void;
-	onCreated: (org: Organization) => void;
+	onCreated: () => void;
 }) {
+	const createOrganization = useOrganizationStore((s) => s.createOrganization);
 	const [name, setName] = useState("");
 	const [slug, setSlug] = useState("");
 	const [submitting, setSubmitting] = useState(false);
@@ -621,24 +634,27 @@ function CreateOrganizationModal({
 		setSubmitting(true);
 		setError("");
 
-		const result = await organizationService.createOrganization({
-			name: name.trim(),
-			slug:
-				slug ||
-				name
-					.trim()
-					.toLowerCase()
-					.replace(/[^a-z0-9]+/g, "-"),
-		});
+		try {
+			await createOrganization({
+				name: name.trim(),
+				slug:
+					slug ||
+					name
+						.trim()
+						.toLowerCase()
+						.replace(/[^a-z0-9]+/g, "-"),
+			});
 
-		if (!result.error && result.data) {
-			onCreated(result.data as unknown as Organization);
-		} else {
-			setError(
-				String(
-					result.message || result.error || "Failed to create organization"
-				)
-			);
+			const storeState = useOrganizationStore.getState();
+			if (storeState.createStatus.message) {
+				setError(
+					storeState.createStatus.message || "Failed to create organization"
+				);
+			} else {
+				onCreated();
+			}
+		} catch {
+			setError("Failed to create organization");
 		}
 		setSubmitting(false);
 	};
@@ -718,8 +734,9 @@ function CreateProjectModal({
 }: {
 	orgId: string | null;
 	onClose: () => void;
-	onCreated: (project: Project) => void;
+	onCreated: () => void;
 }) {
+	const createProject = useProjectsStore((s) => s.createProject);
 	const [name, setName] = useState("");
 	const [description, setDescription] = useState("");
 	const [color, setColor] = useState(PROJECT_COLORS[0]!.value);
@@ -732,18 +749,21 @@ function CreateProjectModal({
 		setSubmitting(true);
 		setError("");
 
-		const result = await projectService.createProject(orgId, {
-			name: name.trim(),
-			description: description.trim() || undefined,
-			color,
-		});
+		try {
+			await createProject(orgId, {
+				name: name.trim(),
+				description: description.trim() || undefined,
+				color,
+			});
 
-		if (!result.error && result.data) {
-			onCreated(result.data as unknown as Project);
-		} else {
-			setError(
-				String(result.message || result.error || "Failed to create project")
-			);
+			const storeState = useProjectsStore.getState();
+			if (storeState.createStatus.message) {
+				setError(storeState.createStatus.message || "Failed to create project");
+			} else {
+				onCreated();
+			}
+		} catch {
+			setError("Failed to create project");
 		}
 		setSubmitting(false);
 	};
@@ -857,16 +877,17 @@ function NotificationDropdown({
 	unreadCount: number;
 	onMarkAllRead: () => void;
 }) {
-	const [notifications, setNotifications] = useState<Notification[]>([]);
+	const fetchNotifications = useNotificationsStore((s) => s.fetchNotifications);
+	const markAsRead = useNotificationsStore((s) => s.markAsRead);
+	const storeNotifications = useNotificationsStore(
+		(s) => s.items
+	) as unknown as Notification[];
 	const [open, setOpen] = useState(false);
 	const [loaded, setLoaded] = useState(false);
 
 	const loadNotifications = async () => {
 		if (loaded) return;
-		const result = await notificationService.getNotifications();
-		if (!result.error && result.data) {
-			setNotifications(result.data as unknown as Notification[]);
-		}
+		await fetchNotifications();
 		setLoaded(true);
 	};
 
@@ -877,14 +898,10 @@ function NotificationDropdown({
 
 	const handleMarkAllRead = () => {
 		onMarkAllRead();
-		setNotifications((prev) => prev.map((n) => ({...n, isRead: true})));
 	};
 
 	const handleMarkRead = async (id: string) => {
-		await notificationService.markAsRead(id);
-		setNotifications((prev) =>
-			prev.map((n) => (n.id === id ? {...n, isRead: true} : n))
-		);
+		await markAsRead(id);
 	};
 
 	const timeAgo = (date: string) => {
@@ -942,12 +959,12 @@ function NotificationDropdown({
 				</div>
 				<DropdownMenuSeparator />
 				<ScrollArea className="max-h-80">
-					{notifications.length === 0 && (
+					{storeNotifications.length === 0 && (
 						<div className="px-3 py-6 text-center text-sm text-muted-foreground">
 							No notifications
 						</div>
 					)}
-					{notifications.map((n) => (
+					{storeNotifications.map((n) => (
 						<DropdownMenuItem
 							key={n.id}
 							className="flex-col items-start gap-0.5 px-3 py-2 cursor-pointer"
@@ -1010,6 +1027,16 @@ function InviteMembersModal({
 	organization: Organization;
 	onClose: () => void;
 }) {
+	const inviteMember = useOrganizationStore((s) => s.inviteMember);
+	const getFullOrganization = useOrganizationStore(
+		(s) => s.getFullOrganization
+	);
+	const listMembersAction = useMembersStore((s) => s.listMembers);
+	const storeMembers = useMembersStore(
+		(s) => s.items
+	) as unknown as OrgMember[];
+	const updateMemberTitle = useMembersStore((s) => s.updateMemberTitle);
+
 	const [activeTab, setActiveTab] = useState<"invite" | "members" | "link">(
 		"invite"
 	);
@@ -1018,7 +1045,6 @@ function InviteMembersModal({
 	const [submitting, setSubmitting] = useState(false);
 	const [error, setError] = useState("");
 	const [success, setSuccess] = useState("");
-	const [members, setMembers] = useState<OrgMember[]>([]);
 	const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([]);
 	const [loadingMembers, setLoadingMembers] = useState(true);
 	const [inviteLink, setInviteLink] = useState("");
@@ -1030,18 +1056,14 @@ function InviteMembersModal({
 
 	useEffect(() => {
 		(async () => {
-			// Fetch current members
-			const memberResult = await memberService.getMembers();
-			if (!memberResult.error && memberResult.data) {
-				setMembers(memberResult.data as unknown as OrgMember[]);
-			}
+			// Fetch current members via store
+			await listMembersAction();
 
 			// Fetch full org to get pending invitations
-			const orgResult = await organizationService.getFullOrganization(
-				organization.id
-			);
-			if (!orgResult.error && orgResult.data) {
-				const fullOrg = orgResult.data as unknown as {
+			await getFullOrganization(organization.id);
+			const orgStoreState = useOrganizationStore.getState();
+			if (orgStoreState.activeOrganization) {
+				const fullOrg = orgStoreState.activeOrganization as unknown as {
 					invitations?: PendingInvite[];
 				};
 				if (fullOrg.invitations) {
@@ -1053,7 +1075,7 @@ function InviteMembersModal({
 
 			setLoadingMembers(false);
 		})();
-	}, [organization.id]);
+	}, [organization.id, listMembersAction, getFullOrganization]);
 
 	const handleInvite = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -1062,20 +1084,19 @@ function InviteMembersModal({
 		setError("");
 		setSuccess("");
 
-		const result = await organizationService.inviteMember({
+		await inviteMember({
 			organizationId: organization.id,
 			email: email.trim(),
 			role,
 		});
 
-		if (!result.error) {
+		const storeState = useOrganizationStore.getState();
+		if (!storeState.inviteStatus.message) {
 			setSuccess(`Invitation sent to ${email.trim()}`);
 			setPendingInvites((prev) => [
 				...prev,
 				{
-					id:
-						((result.data as unknown as Record<string, unknown>)
-							?.id as string) || Date.now().toString(),
+					id: Date.now().toString(),
 					email: email.trim(),
 					role,
 					status: "pending",
@@ -1084,9 +1105,7 @@ function InviteMembersModal({
 			]);
 			setEmail("");
 		} else {
-			setError(
-				String(result.message || result.error || "Failed to send invitation")
-			);
+			setError(storeState.inviteStatus.message || "Failed to send invitation");
 		}
 		setSubmitting(false);
 	};
@@ -1111,19 +1130,18 @@ function InviteMembersModal({
 		let failCount = 0;
 
 		for (const addr of emails) {
-			const result = await organizationService.inviteMember({
+			await inviteMember({
 				organizationId: organization.id,
 				email: addr,
 				role,
 			});
-			if (!result.error) {
+			const storeState = useOrganizationStore.getState();
+			if (!storeState.inviteStatus.message) {
 				successCount++;
 				setPendingInvites((prev) => [
 					...prev,
 					{
-						id:
-							((result.data as unknown as Record<string, unknown>)
-								?.id as string) || Date.now().toString(),
+						id: Date.now().toString(),
 						email: addr,
 						role,
 						status: "pending",
@@ -1148,7 +1166,7 @@ function InviteMembersModal({
 
 	const handleCancelInvite = async (inviteId: string) => {
 		const result = await organizationService.cancelInvitation(inviteId);
-		if (!result.error) {
+		if (!result.message) {
 			setPendingInvites((prev) => prev.filter((i) => i.id !== inviteId));
 		}
 	};
@@ -1205,7 +1223,7 @@ function InviteMembersModal({
 						className={tabClass("members")}
 						onClick={() => setActiveTab("members")}
 					>
-						Members ({members.length})
+						Members ({storeMembers.length})
 					</button>
 					<button
 						className={tabClass("link")}
@@ -1375,13 +1393,13 @@ function InviteMembersModal({
 										</div>
 									))}
 								</div>
-							) : members.length === 0 ? (
+							) : storeMembers.length === 0 ? (
 								<p className="text-sm text-muted-foreground text-center py-8">
 									No members yet. Invite someone to get started.
 								</p>
 							) : (
 								<div className="space-y-2">
-									{members.map((member) => (
+									{storeMembers.map((member) => (
 										<div
 											key={member.id}
 											className="px-3 py-2.5 border border-border rounded-md"
@@ -1426,17 +1444,12 @@ function InviteMembersModal({
 															onKeyDown={async (e) => {
 																if (e.key === "Enter") {
 																	const newTitle = titleInput.trim() || null;
-																	await memberService.updateMemberTitle(
+																	await updateMemberTitle(
 																		member.id,
-																		newTitle
+																		newTitle as string
 																	);
-																	setMembers((prev) =>
-																		prev.map((m) =>
-																			m.id === member.id
-																				? {...m, title: newTitle}
-																				: m
-																		)
-																	);
+																	// Re-fetch members to get updated data
+																	await listMembersAction();
 																	setEditingTitle(null);
 																} else if (e.key === "Escape") {
 																	setEditingTitle(null);
@@ -1451,17 +1464,12 @@ function InviteMembersModal({
 															className="h-5 w-5 p-0 text-xs"
 															onClick={async () => {
 																const newTitle = titleInput.trim() || null;
-																await memberService.updateMemberTitle(
+																await updateMemberTitle(
 																	member.id,
-																	newTitle
+																	newTitle as string
 																);
-																setMembers((prev) =>
-																	prev.map((m) =>
-																		m.id === member.id
-																			? {...m, title: newTitle}
-																			: m
-																	)
-																);
+																// Re-fetch members to get updated data
+																await listMembersAction();
 																setEditingTitle(null);
 															}}
 														>
@@ -1649,8 +1657,9 @@ function EditProjectModal({
 	project: Project;
 	orgId: string | null;
 	onClose: () => void;
-	onUpdated: (project: Project) => void;
+	onUpdated: () => void;
 }) {
+	const updateProject = useProjectsStore((s) => s.updateProject);
 	const [name, setName] = useState(project.name);
 	const [description, setDescription] = useState(project.description || "");
 	const [color, setColor] = useState(project.color || PROJECT_COLORS[0]!.value);
@@ -1663,18 +1672,21 @@ function EditProjectModal({
 		setSubmitting(true);
 		setError("");
 
-		const result = await projectService.updateProject(orgId, project.id, {
-			name: name.trim(),
-			description: description.trim() || null,
-			color,
-		});
+		try {
+			await updateProject(orgId, project.id, {
+				name: name.trim(),
+				description: description.trim() || null,
+				color,
+			});
 
-		if (!result.error && result.data) {
-			onUpdated(result.data as unknown as Project);
-		} else {
-			setError(
-				String(result.message || result.error || "Failed to update project")
-			);
+			const storeState = useProjectsStore.getState();
+			if (storeState.updateStatus.message) {
+				setError(storeState.updateStatus.message || "Failed to update project");
+			} else {
+				onUpdated();
+			}
+		} catch {
+			setError("Failed to update project");
 		}
 		setSubmitting(false);
 	};
@@ -1779,6 +1791,7 @@ function EditOrganizationModal({
 	onClose: () => void;
 	onUpdated: (org: Organization) => void;
 }) {
+	const updateOrganization = useOrganizationStore((s) => s.updateOrganization);
 	const [name, setName] = useState(organization.name);
 	const [slug, setSlug] = useState(organization.slug);
 	const [submitting, setSubmitting] = useState(false);
@@ -1790,24 +1803,27 @@ function EditOrganizationModal({
 		setSubmitting(true);
 		setError("");
 
-		const result = await organizationService.updateOrganization({
-			organizationId: organization.id,
-			name: name.trim(),
-			slug: slug.trim() || undefined,
-		});
-
-		if (!result.error && result.data) {
-			onUpdated({
-				...organization,
+		try {
+			await updateOrganization({
+				organizationId: organization.id,
 				name: name.trim(),
-				slug: slug.trim() || organization.slug,
+				slug: slug.trim() || undefined,
 			});
-		} else {
-			setError(
-				String(
-					result.message || result.error || "Failed to update organization"
-				)
-			);
+
+			const storeState = useOrganizationStore.getState();
+			if (storeState.updateStatus.message) {
+				setError(
+					storeState.updateStatus.message || "Failed to update organization"
+				);
+			} else {
+				onUpdated({
+					...organization,
+					name: name.trim(),
+					slug: slug.trim() || organization.slug,
+				});
+			}
+		} catch {
+			setError("Failed to update organization");
 		}
 		setSubmitting(false);
 	};
@@ -1941,8 +1957,9 @@ function ProfileModal({
 }: {
 	user: User;
 	onClose: () => void;
-	onUpdated: (user: User) => void;
+	onUpdated: () => void;
 }) {
+	const updateUserProfile = useUserStore((s) => s.updateUserProfile);
 	const [name, setName] = useState(user.name);
 	const [submitting, setSubmitting] = useState(false);
 	const [error, setError] = useState("");
@@ -1955,16 +1972,18 @@ function ProfileModal({
 		setError("");
 		setSuccess("");
 
-		const result = await userService.updateProfile({name: name.trim()});
+		try {
+			await updateUserProfile({name: name.trim()});
 
-		if (!result.error && result.data) {
-			const updated = result.data as unknown as User;
-			setSuccess("Profile updated successfully");
-			onUpdated({...user, name: updated.name || name.trim()});
-		} else {
-			setError(
-				String(result.message || result.error || "Failed to update profile")
-			);
+			const storeState = useUserStore.getState();
+			if (storeState.updateStatus.message) {
+				setError(storeState.updateStatus.message || "Failed to update profile");
+			} else {
+				setSuccess("Profile updated successfully");
+				onUpdated();
+			}
+		} catch {
+			setError("Failed to update profile");
 		}
 		setSubmitting(false);
 	};

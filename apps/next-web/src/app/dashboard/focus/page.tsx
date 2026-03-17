@@ -7,7 +7,8 @@ import {Card, CardContent} from "@/components/lib/shadcn/ui/card";
 import {Badge} from "@/components/lib/shadcn/ui/badge";
 import {Avatar, AvatarFallback} from "@/components/lib/shadcn/ui/avatar";
 import {ScrollArea} from "@/components/lib/shadcn/ui/scroll-area";
-import {projectService, taskService} from "@/services/api/PluteoJS";
+import {useProjectsStore} from "@/store";
+import {taskService} from "@/services/api/PluteoJS";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -151,79 +152,86 @@ export default function FocusPage() {
 	const originalTitle = useRef<string>("");
 
 	// ---- Fetch today's tasks across all projects ---
+	const storeProjects = useProjectsStore(
+		(s) => s.items
+	) as unknown as Project[];
 	const fetchTodayTasks = useCallback(async () => {
 		try {
-			const orgId = localStorage.getItem("activeOrgId");
-			const projResult = await projectService.getProjects(
-				orgId && orgId !== "personal" ? orgId : null
-			);
-
-			if (!projResult.error && projResult.data) {
-				const allProjects = projResult.data as unknown as Project[];
-				setProjects(allProjects);
-
-				const allTasks: Task[] = [];
-				for (const project of allProjects) {
-					const tasksResult = await taskService.getTasks(project.id);
-					if (!tasksResult.error && tasksResult.data) {
-						const tasks = tasksResult.data as unknown as Task[];
-						allTasks.push(...tasks);
-					}
-				}
-
-				// Filter to today's tasks
-				const today = new Date();
-				const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-
-				const todayFiltered = allTasks.filter((task) => {
-					if (task.status === "done" || task.status === "closed") {
-						// Show completed today tasks too
-						if (task.dueAt && task.dueAt.startsWith(todayStr)) return true;
-						return false;
-					}
-					// Tasks due today or overdue
-					if (task.dueAt) {
-						const dueDate = task.dueAt.split("T")[0]!;
-						return dueDate <= todayStr;
-					}
-					// Tasks starting today
-					if (task.startAt && task.startAt.startsWith(todayStr)) return true;
-					return false;
-				});
-
-				// Sort: urgent first, then by priority, then overdue first
-				const priorityOrder: Record<string, number> = {
-					urgent: 0,
-					high: 1,
-					medium: 2,
-					low: 3,
-					none: 4,
-				};
-				todayFiltered.sort((a, b) => {
-					// Done/closed last
-					const aDone = a.status === "done" || a.status === "closed";
-					const bDone = b.status === "done" || b.status === "closed";
-					if (aDone && !bDone) return 1;
-					if (!aDone && bDone) return -1;
-					// Priority
-					return (
-						(priorityOrder[a.priority] ?? 4) - (priorityOrder[b.priority] ?? 4)
-					);
-				});
-
-				setTodayTasks(todayFiltered);
-
-				// Mark already completed ones
-				const done = new Set<string>();
-				for (const t of todayFiltered) {
-					if (t.status === "done" || t.status === "closed") done.add(t.id);
-				}
-				setCompletedIds(done);
+			// Use projects already loaded by the dashboard layout
+			const allProjects = storeProjects.length > 0 ? storeProjects : [];
+			if (storeProjects.length === 0) {
+				// Fallback: fetch if not loaded yet
+				const orgId = localStorage.getItem("activeOrgId");
+				await useProjectsStore
+					.getState()
+					.fetchProjects(orgId && orgId !== "personal" ? orgId : null);
+				const updatedProjects = useProjectsStore.getState()
+					.items as unknown as Project[];
+				allProjects.push(...updatedProjects);
 			}
+			setProjects(allProjects);
+
+			const allTasks: Task[] = [];
+			for (const project of allProjects) {
+				const tasksResult = await taskService.getTasks(project.id);
+				if (!tasksResult.error && tasksResult.data) {
+					const tasks = tasksResult.data as unknown as Task[];
+					allTasks.push(...tasks);
+				}
+			}
+
+			// Filter to today's tasks
+			const today = new Date();
+			const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+			const todayFiltered = allTasks.filter((task) => {
+				if (task.status === "done" || task.status === "closed") {
+					// Show completed today tasks too
+					if (task.dueAt && task.dueAt.startsWith(todayStr)) return true;
+					return false;
+				}
+				// Tasks due today or overdue
+				if (task.dueAt) {
+					const dueDate = task.dueAt.split("T")[0]!;
+					return dueDate <= todayStr;
+				}
+				// Tasks starting today
+				if (task.startAt && task.startAt.startsWith(todayStr)) return true;
+				return false;
+			});
+
+			// Sort: urgent first, then by priority, then overdue first
+			const priorityOrder: Record<string, number> = {
+				urgent: 0,
+				high: 1,
+				medium: 2,
+				low: 3,
+				none: 4,
+			};
+			todayFiltered.sort((a, b) => {
+				// Done/closed last
+				const aDone = a.status === "done" || a.status === "closed";
+				const bDone = b.status === "done" || b.status === "closed";
+				if (aDone && !bDone) return 1;
+				if (!aDone && bDone) return -1;
+				// Priority
+				return (
+					(priorityOrder[a.priority] ?? 4) - (priorityOrder[b.priority] ?? 4)
+				);
+			});
+
+			setTodayTasks(todayFiltered);
+
+			// Mark already completed ones
+			const done = new Set<string>();
+			for (const t of todayFiltered) {
+				if (t.status === "done" || t.status === "closed") done.add(t.id);
+			}
+			setCompletedIds(done);
 		} finally {
 			setLoading(false);
 		}
-	}, []);
+	}, [storeProjects]);
 
 	useEffect(() => {
 		fetchTodayTasks();

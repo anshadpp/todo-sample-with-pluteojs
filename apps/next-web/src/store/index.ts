@@ -1,36 +1,12 @@
-import {configureStore} from "@reduxjs/toolkit";
-import {createLogger} from "redux-logger";
-
-import rootReducer from "@/store/RootReducer";
-
-// Redux logger
-const reduxLogger = createLogger({
-	collapsed: true,
-	duration: true,
-});
-
-// Configure the Redux store
-const store = configureStore({
-	reducer: rootReducer,
-	// Note: It's often useful to enable Redux DevTools for development.
-	// You can conditionally enable it based on the environment if needed.
-	devTools: false,
-	middleware: (getDefaultMiddleware) => {
-		const middleware = getDefaultMiddleware();
-
-		if (process.env.NODE_ENV === "development") {
-			middleware.push(reduxLogger as ReturnType<typeof createLogger>);
-		}
-
-		return middleware;
-	},
-});
-
-// Types related to the store
-type StoreType = typeof store;
-type RootState = ReturnType<typeof store.getState>;
-type AppDispatch = typeof store.dispatch;
-
-export default store;
-
-export type {StoreType, RootState, AppDispatch};
+export {useAuthStore} from "./auth/useAuthStore";
+export {useOrganizationStore} from "./organization/useOrganizationStore";
+export {useProjectsStore} from "./projects/useProjectsStore";
+export {useBoardsStore} from "./boards/useBoardsStore";
+export {useTasksStore} from "./tasks/useTasksStore";
+export {useTaskDetailStore} from "./taskDetail/useTaskDetailStore";
+export {useLabelsStore} from "./labels/useLabelsStore";
+export {useNotificationsStore} from "./notifications/useNotificationsStore";
+export {useAutoSortRulesStore} from "./autoSortRules/useAutoSortRulesStore";
+export {useTodosStore} from "./todos/useTodosStore";
+export {useMembersStore} from "./members/useMembersStore";
+export {useUserStore} from "./user/useUserStore";

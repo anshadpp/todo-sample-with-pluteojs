@@ -1,7 +1,5 @@
 import {AxiosInstance} from "axios";
 
-import type {StoreType} from "@/store/index";
-
 import type {InternalAxiosRequestConfig} from "axios";
 
 /**
@@ -11,12 +9,11 @@ import type {InternalAxiosRequestConfig} from "axios";
  * Defined requestInterceptor closures needs to be registered to the constant object
  * axiosRequestInterceptors in order to get mapped.
  *
- * @param store
+ * @param _store
  * @param apiServer
  */
 function PluteoJSServerAxiosRequestInterceptors(
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	store: StoreType | null = null,
+	_store: unknown = null,
 	apiServer: AxiosInstance
 ): void {
 	/**

@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect, useState, useCallback} from "react";
+import {useEffect, useState} from "react";
 import {useRouter} from "next/navigation";
 
 import {Button} from "@/components/lib/shadcn/ui/button";
@@ -10,8 +10,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/lib/shadcn/ui/card";
-import {authService, todoService} from "@/services/api/PluteoJS";
-import type {AuthUser} from "@/services/api/PluteoJS/AuthService";
+import {useAuthStore, useTodosStore} from "@/store";
 import type {
 	Todo,
 	CreateTodoInput,
@@ -20,8 +19,16 @@ import type {
 
 export default function TodosPage() {
 	const router = useRouter();
-	const [user, setUser] = useState<AuthUser | null>(null);
-	const [todos, setTodos] = useState<Todo[]>([]);
+	const user = useAuthStore((s) => s.user);
+	const getSession = useAuthStore((s) => s.getSession);
+	const signOut = useAuthStore((s) => s.signOut);
+
+	const todos = useTodosStore((s) => s.items);
+	const fetchTodos = useTodosStore((s) => s.fetchTodos);
+	const createTodoAction = useTodosStore((s) => s.createTodo);
+	const updateTodoAction = useTodosStore((s) => s.updateTodo);
+	const deleteTodoAction = useTodosStore((s) => s.deleteTodo);
+
 	const [loading, setLoading] = useState(true);
 	const [showForm, setShowForm] = useState(false);
 	const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
@@ -32,29 +39,20 @@ export default function TodosPage() {
 	const [dueAt, setDueAt] = useState("");
 	const [notifyAt, setNotifyAt] = useState("");
 
-	const fetchTodos = useCallback(async () => {
-		const result = await todoService.getTodos();
-		if (!result.error && result.data) {
-			setTodos(result.data as unknown as Todo[]);
-		}
-	}, []);
-
 	useEffect(() => {
 		const checkAuth = async () => {
-			const sessionResult = await authService.getSession();
-			if (sessionResult.error || !sessionResult.data) {
+			await getSession();
+			const state = useAuthStore.getState();
+			if (!state.isAuthenticated) {
 				router.push("/login");
 				return;
 			}
-
-			const sessionData = sessionResult.data as unknown as {user: AuthUser};
-			setUser(sessionData.user);
 			await fetchTodos();
 			setLoading(false);
 		};
 
 		checkAuth();
-	}, [router, fetchTodos]);
+	}, [router, getSession, fetchTodos]);
 
 	const resetForm = () => {
 		setTitle("");
@@ -73,9 +71,8 @@ export default function TodosPage() {
 		if (dueAt) input.dueAt = new Date(dueAt).toISOString();
 		if (notifyAt) input.notifyAt = new Date(notifyAt).toISOString();
 
-		await todoService.createTodo(input);
+		await createTodoAction(input);
 		resetForm();
-		await fetchTodos();
 	};
 
 	const handleUpdate = async (e: React.FormEvent) => {
@@ -97,19 +94,16 @@ export default function TodosPage() {
 			input.notifyAt = null;
 		}
 
-		await todoService.updateTodo(editingTodo.id, input);
+		await updateTodoAction(editingTodo.id, input);
 		resetForm();
-		await fetchTodos();
 	};
 
 	const handleToggleComplete = async (todo: Todo) => {
-		await todoService.updateTodo(todo.id, {completed: !todo.completed});
-		await fetchTodos();
+		await updateTodoAction(todo.id, {completed: !todo.completed});
 	};
 
 	const handleDelete = async (todoId: string) => {
-		await todoService.deleteTodo(todoId);
-		await fetchTodos();
+		await deleteTodoAction(todoId);
 	};
 
 	const startEdit = (todo: Todo) => {
@@ -122,7 +116,7 @@ export default function TodosPage() {
 	};
 
 	const handleSignOut = async () => {
-		await authService.signOut();
+		await signOut();
 		router.push("/login");
 	};
 

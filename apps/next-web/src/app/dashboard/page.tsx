@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect, useState} from "react";
+import {useState} from "react";
 import {useRouter} from "next/navigation";
 import {
 	Card,
@@ -10,7 +10,8 @@ import {
 } from "@/components/lib/shadcn/ui/card";
 import {Button} from "@/components/lib/shadcn/ui/button";
 import {Skeleton} from "@/components/lib/shadcn/ui/skeleton";
-import {projectService, boardService} from "@/services/api/PluteoJS";
+import {useProjectsStore} from "@/store";
+import {boardService} from "@/services/api/PluteoJS";
 
 interface Project {
 	id: string;
@@ -35,22 +36,12 @@ const PROJECT_COLORS = [
 
 export default function DashboardPage() {
 	const router = useRouter();
-	const [projects, setProjects] = useState<Project[]>([]);
-	const [loading, setLoading] = useState(true);
+	const projects = useProjectsStore((s) => s.items) as unknown as Project[];
+	const fetchStatus = useProjectsStore((s) => s.fetchStatus);
 	const [showCreateProject, setShowCreateProject] = useState(false);
 
-	useEffect(() => {
-		(async () => {
-			const activeOrgId = localStorage.getItem("activeOrgId");
-			const orgId =
-				activeOrgId && activeOrgId !== "personal" ? activeOrgId : null;
-			const result = await projectService.getProjects(orgId);
-			if (!result.error && result.data) {
-				setProjects(result.data as unknown as Project[]);
-			}
-			setLoading(false);
-		})();
-	}, []);
+	// Projects are already fetched by the dashboard layout - no need to re-fetch
+	const loading = fetchStatus.isLoading;
 
 	const handleProjectClick = async (project: Project) => {
 		const result = await boardService.getBoards(project.id);
@@ -64,8 +55,7 @@ export default function DashboardPage() {
 		}
 	};
 
-	const handleProjectCreated = (project: Project) => {
-		setProjects((prev) => [...prev, project]);
+	const handleProjectCreated = () => {
 		setShowCreateProject(false);
 	};
 
@@ -158,6 +148,8 @@ function CreateProjectModal({
 	const [submitting, setSubmitting] = useState(false);
 	const [error, setError] = useState("");
 
+	const createProject = useProjectsStore((s) => s.createProject);
+
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!name.trim()) return;
@@ -167,18 +159,18 @@ function CreateProjectModal({
 		const activeOrgId = localStorage.getItem("activeOrgId");
 		const orgId =
 			activeOrgId && activeOrgId !== "personal" ? activeOrgId : null;
-		const result = await projectService.createProject(orgId, {
+		await createProject(orgId, {
 			name: name.trim(),
 			description: description.trim() || undefined,
 			color,
 		});
 
-		if (!result.error && result.data) {
-			onCreated(result.data as unknown as Project);
+		const state = useProjectsStore.getState();
+		if (state.createStatus.responseStatus === "SUCCESS") {
+			const latest = state.items[state.items.length - 1] as unknown as Project;
+			onCreated(latest);
 		} else {
-			setError(
-				String(result.message || result.error || "Failed to create project")
-			);
+			setError(state.createStatus.message || "Failed to create project");
 		}
 		setSubmitting(false);
 	};

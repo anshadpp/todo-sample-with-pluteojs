@@ -10,7 +10,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/lib/shadcn/ui/card";
-import {authService} from "@/services/api/PluteoJS";
+import {useAuthStore} from "@/store";
 
 export default function LoginPage() {
 	return (
@@ -31,6 +31,9 @@ function LoginForm() {
 	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(false);
 
+	const signIn = useAuthStore((s) => s.signIn);
+	const signUp = useAuthStore((s) => s.signUp);
+
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setError("");
@@ -38,18 +41,18 @@ function LoginForm() {
 
 		try {
 			if (isSignUp) {
-				const result = await authService.signUp(name, email, password);
-				if (result.error) {
-					setError(String(result.message || result.error || "Sign up failed"));
+				await signUp(name, email, password);
+				const state = useAuthStore.getState();
+				if (!state.isAuthenticated) {
+					setError(state.signUpStatus.message || "Sign up failed");
 					setLoading(false);
 					return;
 				}
 			} else {
-				const result = await authService.signIn(email, password);
-				if (result.error) {
-					setError(
-						String(result.message || result.error || "Invalid credentials")
-					);
+				await signIn(email, password);
+				const state = useAuthStore.getState();
+				if (!state.isAuthenticated) {
+					setError(state.signInStatus.message || "Invalid credentials");
 					setLoading(false);
 					return;
 				}

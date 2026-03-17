@@ -1,4 +1,4 @@
-import {apiServer, injectStore} from "./axiosConfig";
+import {apiServer} from "./axiosConfig";
 import ExampleService from "./ExampleService";
 import AuthService from "./AuthService";
 import TodoService from "./TodoService";
@@ -30,7 +30,6 @@ const userService = UserService(apiServer);
 const autoSortRuleService = AutoSortRuleService(apiServer);
 
 export {
-	injectStore,
 	exampleService,
 	authService,
 	todoService,

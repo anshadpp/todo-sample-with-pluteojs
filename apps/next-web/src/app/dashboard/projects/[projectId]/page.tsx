@@ -2,7 +2,7 @@
 
 import {useEffect, useState, useCallback} from "react";
 import {useRouter, useParams} from "next/navigation";
-import {boardService} from "@/services/api/PluteoJS";
+import {useBoardsStore} from "@/store";
 import {Button} from "@/components/lib/shadcn/ui/button";
 
 export default function ProjectPage() {
@@ -10,37 +10,42 @@ export default function ProjectPage() {
 	const params = useParams();
 	const projectId = params.projectId as string;
 
+	const fetchBoards = useBoardsStore((s) => s.fetchBoards);
+	const createBoard = useBoardsStore((s) => s.createBoard);
+
 	const [noBoards, setNoBoards] = useState(false);
 	const [creating, setCreating] = useState(false);
 
 	useEffect(() => {
 		(async () => {
-			const result = await boardService.getBoards(projectId);
-			if (!result.error && result.data) {
-				const boards = result.data as unknown as {id: string}[];
-				if (boards.length > 0) {
-					router.replace(
-						`/dashboard/projects/${projectId}/boards/${boards[0]!.id}`
-					);
-				} else {
-					setNoBoards(true);
-				}
+			await fetchBoards(projectId);
+			const state = useBoardsStore.getState();
+			const boardItems = state.items as unknown as {id: string}[];
+			if (boardItems.length > 0) {
+				router.replace(
+					`/dashboard/projects/${projectId}/boards/${boardItems[0]!.id}`
+				);
+			} else {
+				setNoBoards(true);
 			}
 		})();
-	}, [projectId, router]);
+	}, [projectId, router, fetchBoards]);
 
 	const handleCreateBoard = useCallback(
 		async (type: "status" | "category") => {
 			setCreating(true);
 			const name = type === "status" ? "Status Board" : "Category Board";
-			const result = await boardService.createBoard(projectId, {name, type});
-			if (!result.error && result.data) {
-				const board = result.data as unknown as {id: string};
-				router.replace(`/dashboard/projects/${projectId}/boards/${board.id}`);
+			await createBoard(projectId, {name, type});
+			const state = useBoardsStore.getState();
+			const latest = state.items[state.items.length - 1] as unknown as {
+				id: string;
+			};
+			if (latest) {
+				router.replace(`/dashboard/projects/${projectId}/boards/${latest.id}`);
 			}
 			setCreating(false);
 		},
-		[projectId, router]
+		[projectId, router, createBoard]
 	);
 
 	if (noBoards) {

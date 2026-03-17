@@ -1,7 +1,5 @@
 import {AxiosInstance, AxiosResponse} from "axios";
 
-import type {StoreType} from "@/store/index";
-
 interface iResponseInterceptor {
 	onFulfilled: (
 		response: AxiosResponse
@@ -20,7 +18,7 @@ interface iResponseInterceptor {
  * @param apiServer
  */
 function AxiosResponseInterceptors(
-	_store: StoreType | null,
+	_store: unknown = null,
 	apiServer: AxiosInstance
 ): void {
 	// TODO: add responseNetworkFailureInterceptor
