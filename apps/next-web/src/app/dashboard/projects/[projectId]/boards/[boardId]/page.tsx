@@ -285,12 +285,20 @@ export default function BoardPage() {
 					const grouped: Record<string, Task[]> = {};
 
 					if (currentBoardType === "status") {
-						// Group tasks by matching task.status to category statusValue
+						// Group tasks by matching task.status to category statusValue,
+						// falling back to categoryId if no statusValue match is found
 						for (const task of allTasks) {
 							const matchingCat = cats.find(
-								(c: Category) => c.statusValue === task.status
+								(c: Category) => c.statusValue && c.statusValue === task.status
 							);
-							const catId = matchingCat ? matchingCat.id : "uncategorized";
+							const catByIdFallback =
+								task.categoryId &&
+								cats.find((c: Category) => c.id === task.categoryId);
+							const catId = matchingCat
+								? matchingCat.id
+								: catByIdFallback
+									? catByIdFallback.id
+									: "uncategorized";
 							if (!grouped[catId]) grouped[catId] = [];
 							grouped[catId]!.push(task);
 						}
@@ -525,9 +533,10 @@ export default function BoardPage() {
 				const targetCategory = categories.find((c) => c.id === overCategoryId);
 				const movedTask: Task = {
 					...draggedTask,
+					categoryId: overCategoryId,
 					...(boardType === "status" && targetCategory?.statusValue
 						? {status: targetCategory.statusValue}
-						: {categoryId: overCategoryId}),
+						: {}),
 				};
 
 				const overIndex = destTasks.findIndex((t) => t.id === overId);
@@ -596,12 +605,14 @@ export default function BoardPage() {
 				if (boardType === "status") {
 					// Status board: update task.status to match the target column's statusValue
 					const targetCategory = categories.find((c) => c.id === categoryId);
+					const updatePayload: Record<string, unknown> = {
+						sortOrder,
+						categoryId,
+					};
 					if (targetCategory?.statusValue) {
-						await taskService.updateTask(activeId, {
-							status: targetCategory.statusValue,
-							sortOrder,
-						});
+						updatePayload.status = targetCategory.statusValue;
 					}
+					await taskService.updateTask(activeId, updatePayload);
 				} else {
 					// Category board: move task to the category
 					await taskService.moveTask(activeId, {
