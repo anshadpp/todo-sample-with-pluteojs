@@ -52,7 +52,7 @@ export const useTasksStore = create<TasksStore>()(
 					result.httpStatusCode === httpStatusCodes.SUCCESS_OK
 				) {
 					set({
-						items: (result.data?.data as Record<string, unknown>[]) ?? [],
+						items: (result.data as unknown as Record<string, unknown>[]) ?? [],
 						fetchStatus: setFulfilledImm(),
 					});
 				} else {
@@ -72,7 +72,7 @@ export const useTasksStore = create<TasksStore>()(
 					!result.error &&
 					result.httpStatusCode === httpStatusCodes.SUCCESS_CREATED
 				) {
-					const newTask = result.data?.data as Record<string, unknown>;
+					const newTask = result.data as unknown as Record<string, unknown>;
 					set({
 						createStatus: setFulfilledImm(httpStatusCodes.SUCCESS_CREATED),
 						items: newTask ? [...get().items, newTask] : get().items,
@@ -97,7 +97,7 @@ export const useTasksStore = create<TasksStore>()(
 					set({
 						getTaskStatus: setFulfilledImm(),
 						selectedTask:
-							(result.data?.data as Record<string, unknown>) ?? null,
+							(result.data as unknown as Record<string, unknown>) ?? null,
 					});
 				} else {
 					set({
@@ -116,7 +116,7 @@ export const useTasksStore = create<TasksStore>()(
 					!result.error &&
 					result.httpStatusCode === httpStatusCodes.SUCCESS_OK
 				) {
-					const updated = result.data?.data as Record<string, unknown>;
+					const updated = result.data as unknown as Record<string, unknown>;
 					set({
 						updateStatus: setFulfilledImm(),
 						items: updated

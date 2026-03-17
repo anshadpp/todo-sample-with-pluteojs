@@ -71,7 +71,7 @@ export const useBoardsStore = create<BoardsStore>()(
 					result.httpStatusCode === httpStatusCodes.SUCCESS_OK
 				) {
 					set({
-						items: (result.data?.data as Record<string, unknown>[]) ?? [],
+						items: (result.data as unknown as Record<string, unknown>[]) ?? [],
 						fetchStatus: setFulfilledImm(),
 					});
 				} else {
@@ -91,7 +91,7 @@ export const useBoardsStore = create<BoardsStore>()(
 					!result.error &&
 					result.httpStatusCode === httpStatusCodes.SUCCESS_CREATED
 				) {
-					const newBoard = result.data?.data as Record<string, unknown>;
+					const newBoard = result.data as unknown as Record<string, unknown>;
 					set({
 						createStatus: setFulfilledImm(httpStatusCodes.SUCCESS_CREATED),
 						items: newBoard ? [...get().items, newBoard] : get().items,
@@ -114,7 +114,7 @@ export const useBoardsStore = create<BoardsStore>()(
 				) {
 					set({
 						selectedBoard:
-							(result.data?.data as Record<string, unknown>) ?? null,
+							(result.data as unknown as Record<string, unknown>) ?? null,
 					});
 				}
 			},
@@ -165,7 +165,8 @@ export const useBoardsStore = create<BoardsStore>()(
 					result.httpStatusCode === httpStatusCodes.SUCCESS_OK
 				) {
 					set({
-						categories: (result.data?.data as Record<string, unknown>[]) ?? [],
+						categories:
+							(result.data as unknown as Record<string, unknown>[]) ?? [],
 						fetchCategoriesStatus: setFulfilledImm(),
 					});
 				} else {
@@ -185,7 +186,7 @@ export const useBoardsStore = create<BoardsStore>()(
 					!result.error &&
 					result.httpStatusCode === httpStatusCodes.SUCCESS_CREATED
 				) {
-					const newCat = result.data?.data as Record<string, unknown>;
+					const newCat = result.data as unknown as Record<string, unknown>;
 					set({
 						createCategoryStatus: setFulfilledImm(
 							httpStatusCodes.SUCCESS_CREATED

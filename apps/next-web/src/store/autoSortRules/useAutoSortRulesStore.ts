@@ -46,7 +46,7 @@ export const useAutoSortRulesStore = create<AutoSortRulesStore>()(
 					result.httpStatusCode === httpStatusCodes.SUCCESS_OK
 				) {
 					set({
-						items: (result.data?.data as Record<string, unknown>[]) ?? [],
+						items: (result.data as unknown as Record<string, unknown>[]) ?? [],
 						fetchStatus: setFulfilledImm(),
 					});
 				} else {
@@ -66,7 +66,7 @@ export const useAutoSortRulesStore = create<AutoSortRulesStore>()(
 					!result.error &&
 					result.httpStatusCode === httpStatusCodes.SUCCESS_CREATED
 				) {
-					const newRule = result.data?.data as Record<string, unknown>;
+					const newRule = result.data as unknown as Record<string, unknown>;
 					set({
 						createStatus: setFulfilledImm(httpStatusCodes.SUCCESS_CREATED),
 						items: newRule ? [...get().items, newRule] : get().items,

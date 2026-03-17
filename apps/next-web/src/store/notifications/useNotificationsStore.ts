@@ -42,7 +42,7 @@ export const useNotificationsStore = create<NotificationsStore>()(
 					result.httpStatusCode === httpStatusCodes.SUCCESS_OK
 				) {
 					set({
-						items: (result.data?.data as Record<string, unknown>[]) ?? [],
+						items: (result.data as unknown as Record<string, unknown>[]) ?? [],
 						fetchStatus: setFulfilledImm(),
 					});
 				} else {
@@ -64,10 +64,11 @@ export const useNotificationsStore = create<NotificationsStore>()(
 				) {
 					set({
 						unreadCount:
-							(result.data?.data as {count: number} | number | null) !== null
-								? typeof result.data?.data === "number"
-									? result.data.data
-									: ((result.data?.data as {count?: number})?.count ?? 0)
+							(result.data as unknown as {count: number} | number | null) !==
+							null
+								? typeof result.data === "number"
+									? result.data
+									: ((result.data as unknown as {count?: number})?.count ?? 0)
 								: 0,
 						fetchUnreadCountStatus: setFulfilledImm(),
 					});

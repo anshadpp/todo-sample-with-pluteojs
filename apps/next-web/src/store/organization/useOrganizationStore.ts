@@ -65,7 +65,7 @@ export const useOrganizationStore = create<OrganizationStore>()(
 				) {
 					set({
 						organizations:
-							(result.data?.data as Record<string, unknown>[]) ?? [],
+							(result.data as unknown as Record<string, unknown>[]) ?? [],
 						fetchStatus: setFulfilledImm(),
 					});
 				} else {
@@ -85,7 +85,7 @@ export const useOrganizationStore = create<OrganizationStore>()(
 					!result.error &&
 					result.httpStatusCode === httpStatusCodes.SUCCESS_OK
 				) {
-					const newOrg = result.data?.data as Record<string, unknown>;
+					const newOrg = result.data as unknown as Record<string, unknown>;
 					set({
 						createStatus: setFulfilledImm(),
 						organizations: newOrg
@@ -168,7 +168,7 @@ export const useOrganizationStore = create<OrganizationStore>()(
 				) {
 					set({
 						activeOrganization:
-							(result.data?.data as Record<string, unknown>) ?? null,
+							(result.data as unknown as Record<string, unknown>) ?? null,
 					});
 				}
 			},

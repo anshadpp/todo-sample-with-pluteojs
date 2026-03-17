@@ -37,7 +37,8 @@ export const useUserStore = create<UserStore>()(
 					result.httpStatusCode === httpStatusCodes.SUCCESS_OK
 				) {
 					set({
-						profile: (result.data?.data as Record<string, unknown>) ?? null,
+						profile:
+							(result.data as unknown as Record<string, unknown>) ?? null,
 						fetchStatus: setFulfilledImm(),
 					});
 				} else {
@@ -57,7 +58,7 @@ export const useUserStore = create<UserStore>()(
 					!result.error &&
 					result.httpStatusCode === httpStatusCodes.SUCCESS_OK
 				) {
-					const updated = result.data?.data as Record<string, unknown>;
+					const updated = result.data as unknown as Record<string, unknown>;
 					set({
 						updateStatus: setFulfilledImm(),
 						profile: updated ?? null,

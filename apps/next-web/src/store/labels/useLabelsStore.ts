@@ -44,7 +44,7 @@ export const useLabelsStore = create<LabelsStore>()(
 					result.httpStatusCode === httpStatusCodes.SUCCESS_OK
 				) {
 					set({
-						items: (result.data?.data as Record<string, unknown>[]) ?? [],
+						items: (result.data as unknown as Record<string, unknown>[]) ?? [],
 						fetchStatus: setFulfilledImm(),
 					});
 				} else {
@@ -64,7 +64,7 @@ export const useLabelsStore = create<LabelsStore>()(
 					!result.error &&
 					result.httpStatusCode === httpStatusCodes.SUCCESS_CREATED
 				) {
-					const newLabel = result.data?.data as Record<string, unknown>;
+					const newLabel = result.data as unknown as Record<string, unknown>;
 					set({
 						createStatus: setFulfilledImm(httpStatusCodes.SUCCESS_CREATED),
 						items: newLabel ? [...get().items, newLabel] : get().items,

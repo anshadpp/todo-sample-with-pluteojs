@@ -56,7 +56,7 @@ export const useProjectsStore = create<ProjectsStore>()(
 					result.httpStatusCode === httpStatusCodes.SUCCESS_OK
 				) {
 					set({
-						items: (result.data?.data as Record<string, unknown>[]) ?? [],
+						items: (result.data as unknown as Record<string, unknown>[]) ?? [],
 						fetchStatus: setFulfilledImm(),
 					});
 				} else {
@@ -76,7 +76,7 @@ export const useProjectsStore = create<ProjectsStore>()(
 					!result.error &&
 					result.httpStatusCode === httpStatusCodes.SUCCESS_CREATED
 				) {
-					const newProject = result.data?.data as Record<string, unknown>;
+					const newProject = result.data as unknown as Record<string, unknown>;
 					set({
 						createStatus: setFulfilledImm(httpStatusCodes.SUCCESS_CREATED),
 						items: newProject ? [...get().items, newProject] : get().items,
@@ -101,7 +101,7 @@ export const useProjectsStore = create<ProjectsStore>()(
 					set({
 						getProjectStatus: setFulfilledImm(),
 						selectedProject:
-							(result.data?.data as Record<string, unknown>) ?? null,
+							(result.data as unknown as Record<string, unknown>) ?? null,
 					});
 				} else {
 					set({
@@ -120,7 +120,7 @@ export const useProjectsStore = create<ProjectsStore>()(
 					!result.error &&
 					result.httpStatusCode === httpStatusCodes.SUCCESS_OK
 				) {
-					const updated = result.data?.data as Record<string, unknown>;
+					const updated = result.data as unknown as Record<string, unknown>;
 					const state = get();
 					set({
 						updateStatus: setFulfilledImm(),

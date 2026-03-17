@@ -47,7 +47,7 @@ export const useTodosStore = create<TodosStore>()(
 					result.httpStatusCode === httpStatusCodes.SUCCESS_OK
 				) {
 					set({
-						items: (result.data?.data as Todo[]) ?? [],
+						items: (result.data as unknown as Todo[]) ?? [],
 						fetchStatus: setFulfilledImm(),
 					});
 				} else {
@@ -67,7 +67,7 @@ export const useTodosStore = create<TodosStore>()(
 					!result.error &&
 					result.httpStatusCode === httpStatusCodes.SUCCESS_CREATED
 				) {
-					const newTodo = result.data?.data as Todo;
+					const newTodo = result.data as unknown as Todo;
 					set({
 						createStatus: setFulfilledImm(httpStatusCodes.SUCCESS_CREATED),
 						items: newTodo ? [...get().items, newTodo] : get().items,
@@ -89,7 +89,7 @@ export const useTodosStore = create<TodosStore>()(
 					!result.error &&
 					result.httpStatusCode === httpStatusCodes.SUCCESS_OK
 				) {
-					const updated = result.data?.data as Todo;
+					const updated = result.data as unknown as Todo;
 					set({
 						updateStatus: setFulfilledImm(),
 						items: updated

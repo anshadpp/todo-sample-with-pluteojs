@@ -63,7 +63,8 @@ export const useTaskDetailStore = create<TaskDetailStore>()(
 					result.httpStatusCode === httpStatusCodes.SUCCESS_OK
 				) {
 					set({
-						comments: (result.data?.data as Record<string, unknown>[]) ?? [],
+						comments:
+							(result.data as unknown as Record<string, unknown>[]) ?? [],
 						fetchCommentsStatus: setFulfilledImm(),
 					});
 				} else {
@@ -83,7 +84,7 @@ export const useTaskDetailStore = create<TaskDetailStore>()(
 					!result.error &&
 					result.httpStatusCode === httpStatusCodes.SUCCESS_CREATED
 				) {
-					const newComment = result.data?.data as Record<string, unknown>;
+					const newComment = result.data as unknown as Record<string, unknown>;
 					set({
 						createCommentStatus: setFulfilledImm(
 							httpStatusCodes.SUCCESS_CREATED
@@ -155,7 +156,8 @@ export const useTaskDetailStore = create<TaskDetailStore>()(
 					result.httpStatusCode === httpStatusCodes.SUCCESS_OK
 				) {
 					set({
-						activities: (result.data?.data as Record<string, unknown>[]) ?? [],
+						activities:
+							(result.data as unknown as Record<string, unknown>[]) ?? [],
 						fetchActivitiesStatus: setFulfilledImm(),
 					});
 				} else {
@@ -177,7 +179,10 @@ export const useTaskDetailStore = create<TaskDetailStore>()(
 				) {
 					set({
 						dependencies:
-							(result.data?.data as unknown as Record<string, unknown>[]) ?? [],
+							(result.data as unknown as unknown as Record<
+								string,
+								unknown
+							>[]) ?? [],
 						fetchDependenciesStatus: setFulfilledImm(),
 					});
 				} else {
@@ -205,7 +210,7 @@ export const useTaskDetailStore = create<TaskDetailStore>()(
 					!result.error &&
 					result.httpStatusCode === httpStatusCodes.SUCCESS_CREATED
 				) {
-					const dep = result.data?.data as Record<string, unknown>;
+					const dep = result.data as unknown as Record<string, unknown>;
 					set({
 						addDependencyStatus: setFulfilledImm(
 							httpStatusCodes.SUCCESS_CREATED
